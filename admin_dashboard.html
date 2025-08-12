@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>Admin Dashboard • RentalShop</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet"/>
+
+  <!-- Theme (RentalOrder gradient + palette) -->
+  <style type="text/tailwindcss">
+    :root{
+      --cyan:#06B6D4; --cyan-hover:#0891B2;
+      --bg-deep:#061222; --bg-bluegray:#0D3042;
+      --heading:#1F2937; --body:#6B7280;
+      --input-bg:#F9FAFB; --input-border:#D1D5DB; --icon:#9CA3AF;
+    }
+    html,body{height:100%}
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      color:var(--body);
+      min-height:100dvh; overflow-x:hidden;
+    }
+    /* Background gradient + soft highlights */
+    .rs-gradient::before{
+      content:""; position:fixed; inset:-10%; z-index:-1;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(6,182,212,.10) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(6,182,212,.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(13,48,66,.30) 0%, transparent 50%),
+        linear-gradient(135deg, #061222 0%, #0D3042 50%, #134E4A 100%);
+    }
+    .glass {
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .btn-primary{@apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition; background:var(--cyan)}
+    .btn-primary:hover{ background:var(--cyan-hover) }
+    .chip{@apply rounded-md px-3 py-2 text-sm font-medium transition text-white/90}
+    .chip:hover{ background:rgba(255,255,255,.10) }
+    .chip.active{ background:white; color:var(--heading) }
+    .card{@apply rounded-2xl bg-white shadow-lg border; border-color:#EEF2F7}
+    .h-title{ color:var(--heading) } .muted{ color:var(--body) }
+    .input{
+      @apply w-full rounded-md px-3 py-2 text-sm;
+      background:var(--input-bg); border:1px solid var(--input-border); color:var(--heading);
+    }
+    .input:focus{ outline:none; box-shadow:0 0 0 3px rgba(6,182,212,.35); border-color:var(--cyan) }
+
+    /* Dropdown base */
+    .menu{ @apply absolute right-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black/5 opacity-0 invisible pointer-events-none transition; }
+    .menu.open{ @apply opacity-100 visible pointer-events-auto; }
+  </style>
+</head>
+<body class="rs-gradient">
+  <div class="min-h-dvh">
+    <!-- Header -->
+    <header class="sticky top-0 z-40">
+      <div class="glass">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <!-- Top row -->
+          <div class="h-16 flex items-center justify-between gap-3 flex-wrap">
+            <!-- Left: brand + nav -->
+            <div class="flex items-center gap-2">
+              <a href="#" class="h-10 w-10 rounded-xl flex items-center justify-center text-white" style="background:#06B6D4" aria-label="Home">
+                <span class="material-icons">home</span>
+              </a>
+              <nav class="hidden md:flex gap-1" id="main-nav">
+                <a class="chip active" href="admin_dashboard.html" data-nav="dashboard">Dashboard</a>
+                <a class="chip" href="admin_rental.html" data-nav="rental">Rental</a>
+                <a class="chip" href="admin_order.html" data-nav="order">Order</a>
+                <a class="chip" href="admin_product.html" data-nav="products">Products</a>
+                <a class="chip" href="admin_reporting.html" data-nav="reporting">Reporting</a>
+                <a class="chip" href="admin_setting.html" data-nav="setting">Setting</a>
+              </nav>
+            </div>
+
+            <!-- Right: tools (wraps so nothing overlaps) -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+              <!-- Search (fluid on small screens) -->
+              <div class="relative order-2 w-full sm:order-1 sm:w-72 md:w-80">
+                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-white/70">search</span>
+                <input class="pl-10 pr-3 py-2 w-full rounded-md text-sm text-white/90 placeholder-white/70 bg-white/10 ring-1 ring-white/20 focus:ring-2 focus:ring-[var(--cyan)] focus:outline-none" placeholder="Search dashboard…"/>
+              </div>
+
+              <!-- Notifications -->
+              <div class="relative order-1 sm:order-2">
+                <button id="notif-btn" class="h-10 w-10 rounded-xl flex items-center justify-center text-white/90 hover:bg-white/10 relative" aria-haspopup="true" aria-expanded="false" aria-label="Notifications">
+                  <span class="material-icons">notifications</span>
+                  <span id="notif-badge" class="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center text-[10px] font-semibold text-white bg-red-500 rounded-full h-5 min-w-[1.25rem] px-1">2</span>
+                </button>
+                <div id="notif-menu" class="menu w-80 sm:w-96">
+                  <div class="px-4 py-3 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-gray-900">Notifications</p>
+                      <button id="notif-clear" class="text-xs text-cyan-600 hover:underline">Mark all read</button>
+                    </div>
+                  </div>
+                  <ul id="notif-list" class="max-h-72 overflow-auto">
+                    <li class="px-4 py-3 hover:bg-gray-50">
+                      <p class="text-sm text-gray-800">Inventory sync completed.</p>
+                      <p class="text-xs text-gray-500 mt-0.5">5 min ago</p>
+                    </li>
+                    <li class="px-4 py-3 hover:bg-gray-50">
+                      <p class="text-sm text-gray-800">New user “Adam” joined.</p>
+                      <p class="text-xs text-gray-500 mt-0.5">20 min ago</p>
+                    </li>
+                  </ul>
+                  <div class="px-4 py-2 border-t border-gray-100">
+                    <button class="text-sm text-cyan-600 hover:underline">View all</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Profile (Settings removed from dropdown) -->
+              <div class="relative order-3" id="profile-root">
+                <button id="profile-btn" class="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/15 px-2 py-1.5 ring-1 ring-white/20" aria-haspopup="true" aria-expanded="false">
+                  <span class="h-8 w-8 rounded-full inline-grid place-items-center ring-2 ring-white/30" style="background:#06B6D4">
+                    <span class="material-icons text-white">person</span>
+                  </span>
+                  <span class="hidden sm:block text-sm text-white/90">Admin</span>
+                  <span class="material-icons text-white/85">expand_more</span>
+                </button>
+                <div id="profile-menu" class="menu">
+                  <div class="px-4 py-3">
+                    <p class="text-sm text-gray-500">Signed in as</p>
+                    <p class="text-sm font-medium text-gray-900 truncate">admin@rentalshop.com</p>
+                  </div>
+                  <div class="py-1">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><span class="material-icons-outlined align-[-4px] mr-2 text-gray-400">person</span> Profile</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><span class="material-icons-outlined align-[-4px] mr-2 text-gray-400">help</span> Help</a>
+                  </div>
+                  <div class="py-1 border-t border-gray-100">
+                    <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><span class="material-icons-outlined align-[-4px] mr-2 text-red-400">logout</span> Sign out</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile menu placeholder -->
+              <button class="md:hidden h-10 w-10 rounded-xl flex items-center justify-center text-white/90 hover:bg-white/10" aria-label="Menu">
+                <span class="material-icons">menu</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Secondary header row (optional actions) -->
+          <div class="pb-4 flex items-center justify-end">
+            <button class="btn-primary" type="button">
+              <span class="material-icons text-base">insights</span>
+              Analytics
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+
+      <!-- KPI cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div class="card p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium muted">Revenue (30d)</h3>
+            <span class="material-icons-outlined" style="color:var(--icon)">trending_up</span>
+          </div>
+          <p class="mt-2 text-3xl font-semibold h-title">₹ 10,599</p>
+          <p class="text-xs text-green-600 mt-1">+12.4% vs last month</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium muted">Orders</h3>
+            <span class="material-icons-outlined" style="color:var(--icon)">shopping_bag</span>
+          </div>
+          <p class="mt-2 text-3xl font-semibold h-title">80</p>
+          <p class="text-xs text-green-600 mt-1">+6 new today</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium muted">Quotations</h3>
+            <span class="material-icons-outlined" style="color:var(--icon)">request_quote</span>
+          </div>
+          <p class="mt-2 text-3xl font-semibold h-title">10</p>
+          <p class="text-xs text-yellow-600 mt-1">2 awaiting approval</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium muted">Top Product</h3>
+            <span class="material-icons-outlined" style="color:var(--icon)">star</span>
+          </div>
+          <p class="mt-2 text-3xl font-semibold h-title">Wheelchairs</p>
+          <p class="text-xs text-green-600 mt-1">Best seller this week</p>
+        </div>
+      </section>
+
+      <!-- Two-column content -->
+      <section class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Table: Top Products -->
+        <div class="card p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold h-title">Top Products</h2>
+            <button class="text-sm text-cyan-600 hover:underline">Export</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left">
+              <thead>
+                <tr class="border-b">
+                  <th class="py-3 pr-3 text-sm font-semibold h-title">Product</th>
+                  <th class="px-3 py-3 text-sm font-semibold h-title">Ordered</th>
+                  <th class="px-3 py-3 text-sm font-semibold h-title">Revenue</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <tr>
+                  <td class="py-3 pr-3 h-title">Wheelchairs</td>
+                  <td class="px-3 py-3 h-title">10</td>
+                  <td class="px-3 py-3 h-title">₹ 3,032</td>
+                </tr>
+                <tr>
+                  <td class="py-3 pr-3 h-title">Tables</td>
+                  <td class="px-3 py-3 h-title">5</td>
+                  <td class="px-3 py-3 h-title">₹ 1,008</td>
+                </tr>
+                <tr>
+                  <td class="py-3 pr-3 h-title">Chairs</td>
+                  <td class="px-3 py-3 h-title">4</td>
+                  <td class="px-3 py-3 h-title">₹ 3,008</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Card: Customers -->
+        <div class="card p-5">
+          <h2 class="text-lg font-semibold h-title mb-4">Top Customers</h2>
+          <ul class="space-y-3">
+            <li class="flex items-center justify-between">
+              <span class="h-title">Customer 1</span>
+              <span class="font-semibold h-title">₹ 3,032</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <span class="h-title">Customer 2</span>
+              <span class="font-semibold h-title">₹ 1,008</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <span class="h-title">Customer 3</span>
+              <span class="font-semibold h-title">₹ 3,008</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Full-width panel -->
+      <section class="mt-8 card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold h-title">Activity</h2>
+          <div class="flex items-center gap-2">
+            <button class="rounded-md border px-3 py-2 text-sm h-title hover:bg-gray-50">This Week</button>
+            <button class="btn-primary">
+              <span class="material-icons text-base">download</span>
+              Download
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div class="rounded-lg border p-4">
+            <p class="muted">New Orders</p>
+            <p class="mt-1 text-2xl font-semibold h-title">24</p>
+          </div>
+          <div class="rounded-lg border p-4">
+            <p class="muted">Returns</p>
+            <p class="mt-1 text-2xl font-semibold h-title">3</p>
+          </div>
+          <div class="rounded-lg border p-4">
+            <p class="muted">Support Tickets</p>
+            <p class="mt-1 text-2xl font-semibold h-title">5</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- JS: notifications + profile dropdown -->
+  <script>
+    // Generic dropdown toggler
+    function attachDropdown(btnId, menuId){
+      const btn = document.getElementById(btnId);
+      const menu = document.getElementById(menuId);
+      if(!btn || !menu) return;
+      const toggle = ()=> menu.classList.toggle('open');
+      const close  = ()=> menu.classList.remove('open');
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
+      document.addEventListener('click', ()=> close());
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
+    }
+
+    // Init dropdowns
+    attachDropdown('profile-btn','profile-menu');
+    attachDropdown('notif-btn','notif-menu');
+
+    // Clear notifications -> hide badge
+    const clearBtn = document.getElementById('notif-clear');
+    const badge = document.getElementById('notif-badge');
+    if(clearBtn && badge){
+      clearBtn.addEventListener('click', ()=>{
+        badge.textContent = '';
+        badge.classList.add('hidden');
+      });
+    }
+
+    // Keep nav “active” highlight on click (demo)
+    document.querySelectorAll('#main-nav .chip').forEach(link=>{
+      link.addEventListener('click', (e)=> {
+        e.preventDefault();
+        document.querySelectorAll('#main-nav .chip').forEach(a=>a.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

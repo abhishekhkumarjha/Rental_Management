@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin Dashboard • Reporting</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style type="text/tailwindcss">
+    :root{
+      --primary:#06B6D4; --primary-hover:#0891B2;
+      --bg-deep:#061222; --bg-bluegray:#0D3042;
+      --heading:#1F2937; --body:#6B7280; --icon:#9CA3AF;
+      --input-bg:#F9FAFB; --input-border:#D1D5DB;
+    }
+    html,body{height:100%}
+    body{
+      @apply text-[15px] antialiased;
+      color:var(--body);
+      background:
+        radial-gradient(1200px 800px at 20% 0%, rgba(6,182,212,.08), transparent 60%),
+        radial-gradient(900px 700px at 80% 100%, rgba(8,145,178,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-bluegray) 100%);
+      background-attachment:fixed;
+    }
+    .bg-waves::before{
+      content:""; position:absolute; inset:0; pointer-events:none; opacity:.35;
+      background-image:url('data:image/svg+xml;utf8,\
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 600" preserveAspectRatio="none">\
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">\
+          <stop stop-color="%2306B6D4" stop-opacity="0.25"/><stop offset="1" stop-color="%230D3042" stop-opacity="0.1"/>\
+        </linearGradient></defs>\
+        <path d="M0,120 C240,200 480,40 720,100 C960,160 1200,40 1440,120 L1440,0 L0,0 Z" fill="url(%23g)"/>\
+        <path d="M0,480 C220,420 520,560 760,500 C1000,440 1210,560 1440,500 L1440,600 L0,600 Z" fill="url(%23g)"/>\
+      </svg>');
+      background-size:cover; background-position:center; filter:blur(2px);
+    }
+
+    .card{@apply bg-white rounded-2xl shadow-xl shadow-black/10}
+    .btn-primary{background:var(--primary); color:#fff; @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 font-medium transition}
+    .btn-primary:hover{background:var(--primary-hover)}
+    .link{color:var(--primary); text-decoration:none} .link:hover{text-decoration:underline}
+    .heading{color:var(--heading)}
+    .input{background:var(--input-bg); border:1px solid var(--input-border); @apply rounded-xl px-3 py-2 outline-none transition}
+    .input:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(6,182,212,.25)}
+
+    /* Header (single row) */
+    .topbar{ @apply sticky top-0 z-30 backdrop-blur bg-white/5; }
+    .topbar-border{ box-shadow: inset 0 -1px 0 0 rgba(255,255,255,.12); }
+    .nav-link{ @apply text-white/90 px-3 py-2 rounded-xl transition font-medium; }
+    .nav-link:hover{ @apply text-white; background: rgba(255,255,255,.08); }
+    .nav-active-pill{
+      @apply bg-white text-[#0F172A] rounded-xl;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 6px 20px -12px rgba(0,0,0,.35);
+    }
+    .brand-home{
+      @apply h-10 w-10 rounded-2xl grid place-items-center;
+      background: var(--primary);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 8px 20px -10px rgba(6,182,212,.8);
+    }
+    .search-glass{
+      @apply rounded-2xl border px-4 py-2 pl-10 text-white/95 min-w-[280px];
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-color: rgba(255,255,255,.25);
+    }
+    .search-glass::placeholder{ color: rgba(255,255,255,.75); }
+    .search-glass:focus{
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(6,182,212,.25);
+    }
+    .user-pill{
+      @apply rounded-2xl border px-3 py-1.5 flex items-center gap-2 text-white/90 relative;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-color: rgba(255,255,255,.25);
+    }
+    .user-avatar{
+      @apply h-8 w-8 rounded-full grid place-items-center text-white font-semibold;
+      background: var(--primary);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+    }
+    .dropdown{
+      @apply absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl shadow-black/10 p-4 z-40;
+    }
+    .drop-row{@apply flex items-center gap-3 text-sm text-[#374151];}
+    .drop-link{@apply text-[#0F172A] hover:bg-gray-100 rounded-lg px-3 py-2 w-full text-left;}
+  </style>
+</head>
+
+<body class="relative">
+  <div class="bg-waves absolute inset-0 -z-10"></div>
+
+  <div class="min-h-full">
+    <!-- HEADER -->
+    <div class="topbar topbar-border">
+      <div class="mx-auto px-4 md:px-8">
+        <div class="h-16 flex items-center gap-4">
+          <!-- Home / brand -->
+          <div class="brand-home">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z"/>
+            </svg>
+          </div>
+
+          <!-- Primary nav (Reporting highlighted) -->
+          <nav id="topNav" class="flex items-center gap-1">
+            <a href="admin_dashboard.html" class="nav-link" data-route="dashboard">Dashboard</a>
+            <a href="admin_rental.html" class="nav-link" data-route="rental">Rental</a>
+            <a href="admin_order" class="nav-link" data-route="order">Order</a>
+            <a href="admin_product" class="nav-link" data-route="products">Products</a>
+            <a href="admin_reporting" class="nav-link nav-active-pill" data-route="reporting">Reporting</a>
+            <a href="admin_setting" class="nav-link" data-route="setting">Setting</a>
+          </nav>
+
+          <!-- Search + profile -->
+          <div class="ml-auto flex items-center gap-3">
+            <div class="relative">
+              <input id="globalSearch" class="search-glass" type="search" placeholder="Search orders..." />
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-opacity=".85" stroke-width="2">
+                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+              </svg>
+            </div>
+
+            <!-- Profile dropdown -->
+            <div class="relative">
+              <button id="profileBtn" class="user-pill" aria-haspopup="true" aria-expanded="false">
+                <span class="user-avatar">A</span>
+                <span>Adam</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+
+              <div id="profileMenu" class="dropdown hidden">
+                <div class="drop-row">
+                  <div class="h-10 w-10 rounded-full bg-[var(--primary)] grid place-items-center text-white font-semibold">A</div>
+                  <div>
+                    <div class="font-semibold">Adam Carter</div>
+                    <div class="text-xs text-gray-500">Super Admin</div>
+                  </div>
+                </div>
+                <div class="mt-2 text-sm text-gray-600">adam@rentalshop.io</div>
+                <hr class="my-3">
+                <button class="drop-link">Profile</button>
+                <button class="drop-link">Security</button>
+                <button class="drop-link">Billing</button>
+                <hr class="my-3">
+                <button class="drop-link">Sign out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <main class="px-4 md:px-8 pb-12">
+      <header class="mt-8">
+        <h1 class="heading text-3xl font-bold">Reporting</h1>
+        <p class="mt-1">Overview of returns, transfers, revenue impact, and operational KPIs.</p>
+      </header>
+
+      <!-- Admin credentials / at-a-glance -->
+      <section class="grid lg:grid-cols-4 sm:grid-cols-2 gap-4 mt-6">
+        <div class="card p-5">
+          <div class="text-xs uppercase tracking-wider text-gray-500">Admin</div>
+          <div class="mt-1 heading font-semibold">Adam Carter</div>
+          <div class="mt-2 text-sm">Role: <span class="heading font-medium">Super Admin</span></div>
+          <div class="text-sm">Email: <a class="link" href="mailto:adam@rentalshop.io">adam@rentalshop.io</a></div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs uppercase tracking-wider text-gray-500">Environment</div>
+          <div class="mt-1 heading font-semibold">Production</div>
+          <div class="mt-2 text-sm">Data Range Loaded: <span class="heading font-medium">Last 30 days</span></div>
+          <div class="text-sm">Timezone: <span class="heading font-medium">UTC+05:30</span></div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs uppercase tracking-wider text-gray-500">Security</div>
+          <div class="mt-1 heading font-semibold">2-Factor Enabled</div>
+          <div class="mt-2 text-sm">Sessions: <span class="heading font-medium">2 active</span></div>
+          <div class="text-sm">Last Password Change: <span class="heading font-medium">20d ago</span></div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs uppercase tracking-wider text-gray-500">Exports</div>
+          <div class="mt-1 heading font-semibold">CSV & PDF</div>
+          <div class="mt-2"><button class="btn-primary" id="exportBtn">Export Current View</button></div>
+        </div>
+      </section>
+
+      <!-- Filters -->
+      <section class="card p-5 mt-6">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="heading text-lg font-semibold">Report Filters</h2>
+          <div class="flex gap-2">
+            <button class="btn-primary" id="applyBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M8 6v12l4-3 4 3V6"/></svg>
+              Apply
+            </button>
+            <button id="resetBtn" class="rounded-xl px-4 py-2 font-medium text-white border border-white/30 hover:bg-white/10 transition">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-6 sm:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">From</label>
+            <input id="fFrom" class="input w-full" type="date" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">To</label>
+            <input id="fTo" class="input w-full" type="date" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Report Type</label>
+            <select id="fReportType" class="input w-full">
+              <option value="Returns">Returns</option>
+              <option value="Transfers" disabled>Transfers (demo)</option>
+              <option value="Revenue Impact" disabled>Revenue Impact (demo)</option>
+              <option value="Inventory Movements" disabled>Inventory Movements (demo)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Product</label>
+            <input id="fProduct" class="input w-full" type="text" placeholder="Search product…"/>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Responsible</label>
+            <select id="fResp" class="input w-full">
+              <option>Any</option><option>Adam</option><option>Priya</option><option>Ken</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Transfer Type</label>
+            <select id="fType" class="input w-full">
+              <option>All</option><option>Return In</option><option>Return Out</option><option>Internal Move</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- KPIs -->
+      <section class="grid xl:grid-cols-4 sm:grid-cols-2 gap-4 mt-6" id="kpiWrap">
+        <!-- filled by JS -->
+      </section>
+
+      <!-- Charts -->
+      <section class="grid lg:grid-cols-2 gap-4 mt-6">
+        <div class="card p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="heading font-semibold">Returns by Status</h3>
+            <a class="link text-sm" href="#">View details</a>
+          </div>
+          <canvas id="statusChart" class="mt-4"></canvas>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="heading font-semibold">Daily Returns (Last 2 Weeks)</h3>
+            <a class="link text-sm" href="#" id="dlCsv">Download CSV</a>
+          </div>
+          <canvas id="dailyChart" class="mt-4"></canvas>
+        </div>
+      </section>
+
+      <!-- Table -->
+      <section class="card p-5 mt-6 overflow-x-auto">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="heading font-semibold">Recent Return In</h3>
+          <div class="flex gap-2">
+            <input id="tableSearch" class="input" type="search" placeholder="Search…" />
+            <button class="btn-primary" id="availabilityBtn">Check Availability</button>
+          </div>
+        </div>
+        <table class="min-w-[720px] w-full border-separate border-spacing-y-2">
+          <thead>
+            <tr class="text-left text-xs uppercase tracking-wide text-gray-500">
+              <th class="px-3 py-2">Return #</th>
+              <th class="px-3 py-2">Customer</th>
+              <th class="px-3 py-2">Schedule Date</th>
+              <th class="px-3 py-2">Responsible</th>
+              <th class="px-3 py-2">Transfer Type</th>
+              <th class="px-3 py-2 text-right">Total</th>
+              <th class="px-3 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <!-- rows filled by JS -->
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Footer actions -->
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button class="btn-primary" id="confirmBtn">Confirm</button>
+        <button class="btn-primary" id="cancelBtn">Cancel</button>
+        <a class="link" href="#">Go to Products</a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ----- Demo dataset (returns) -----
+    const data = [
+      {id:'Return/In/0001', customer:'Acme Corp', date:'2025-08-10', responsible:'Adam', type:'Return In', total:1000, status:'Waiting', product:'Camera Kit'},
+      {id:'Return/In/0002', customer:'BlueStone', date:'2025-08-10', responsible:'Priya', type:'Internal Move', total:2600, status:'Ready', product:'Mic Set'},
+      {id:'Return/In/0003', customer:'Delta Pvt Ltd', date:'2025-08-09', responsible:'Ken', type:'Return Out', total:740, status:'Done', product:'Tripod'},
+      {id:'Return/In/0004', customer:'Nimbus LLC', date:'2025-08-08', responsible:'Adam', type:'Return In', total:450, status:'Draft', product:'LED Panel'},
+      {id:'Return/In/0005', customer:'Acme Corp', date:'2025-08-07', responsible:'Priya', type:'Return In', total:1200, status:'Done', product:'Gimbal'},
+      {id:'Return/In/0006', customer:'Violet Works', date:'2025-08-06', responsible:'Ken', type:'Return In', total:300, status:'Waiting', product:'Batteries'},
+      {id:'Return/In/0007', customer:'Zen Labs', date:'2025-08-05', responsible:'Adam', type:'Return Out', total:980, status:'Ready', product:'Lens'},
+      {id:'Return/In/0008', customer:'BlueStone', date:'2025-08-04', responsible:'Ken', type:'Internal Move', total:520, status:'Done', product:'Filters'},
+      {id:'Return/In/0009', customer:'Omega Inc', date:'2025-08-03', responsible:'Adam', type:'Return In', total:610, status:'Waiting', product:'Light Stand'},
+      {id:'Return/In/0010', customer:'Acme Corp', date:'2025-08-02', responsible:'Priya', type:'Return In', total:410, status:'Ready', product:'Softbox'},
+      {id:'Return/In/0011', customer:'Delta Pvt Ltd', date:'2025-08-01', responsible:'Ken', type:'Return In', total:380, status:'Done', product:'Camera Cage'},
+      {id:'Return/In/0012', customer:'Nimbus LLC', date:'2025-07-31', responsible:'Adam', type:'Return Out', total:750, status:'Draft', product:'Monitor'}
+    ];
+
+    // ----- State -----
+    let filters = {
+      text:'', from:'', to:'', reportType:'Returns', product:'', resp:'Any', type:'All'
+    };
+    let topSearchText = '';
+    let tableSearchText = '';
+
+    // ----- Helpers -----
+    const byId = (id)=>document.getElementById(id);
+    const fmt = (n)=>'₹ ' + n.toLocaleString('en-IN');
+
+    function withinDate(d, from, to){
+      if(from && d < from) return false;
+      if(to && d > to) return false;
+      return true;
+    }
+
+    function applyFilters(){
+      const from = filters.from || '0000-01-01';
+      const to   = filters.to   || '9999-12-31';
+      const txt  = (filters.text + ' ' + topSearchText + ' ' + tableSearchText + ' ' + filters.product).trim().toLowerCase();
+
+      return data.filter(r=>{
+        if(!withinDate(r.date, from, to)) return false;
+        if(filters.resp !== 'Any' && r.responsible !== filters.resp) return false;
+        if(filters.type !== 'All' && r.type !== filters.type) return false;
+        if(txt){
+          const s = `${r.id} ${r.customer} ${r.product} ${r.responsible} ${r.type} ${r.status}`.toLowerCase();
+          if(!s.includes(txt)) return false;
+        }
+        return true;
+      });
+    }
+
+    // ----- Renderers -----
+    function renderTable(rows){
+      const tbody = byId('tbody');
+      tbody.innerHTML = '';
+      for(const r of rows){
+        const tr = document.createElement('tr');
+        tr.className = 'bg-gray-50 hover:bg-gray-100';
+        tr.innerHTML = `
+          <td class="px-3 py-2 font-medium heading">${r.id}</td>
+          <td class="px-3 py-2">${r.customer}</td>
+          <td class="px-3 py-2">${r.date}</td>
+          <td class="px-3 py-2">${r.responsible}</td>
+          <td class="px-3 py-2">${r.type}</td>
+          <td class="px-3 py-2 text-right">${fmt(r.total)}</td>
+          <td class="px-3 py-2">${statusBadge(r.status)}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function statusBadge(s){
+      const map = {
+        Draft:'bg-gray-700',
+        Waiting:'bg-[var(--primary)]',
+        Ready:'bg-emerald-600',
+        Done:'bg-rose-600'
+      };
+      return `<span class="inline-flex items-center rounded-full ${map[s]} text-white text-xs px-2.5 py-1">${s}</span>`;
+    }
+
+    function renderKPIs(rows){
+      const waiting = rows.filter(r=>r.status==='Waiting').length;
+      const ready   = rows.filter(r=>r.status==='Ready'  ).length;
+      const done    = rows.filter(r=>r.status==='Done'   ).length;
+      const total   = rows.reduce((a,b)=>a+b.total,0);
+
+      byId('kpiWrap').innerHTML = `
+        <div class="card p-5">
+          <div class="text-sm text-gray-500">Returns (filtered)</div>
+          <div class="mt-2 heading text-3xl font-bold">${rows.length.toLocaleString()}</div>
+          <div class="mt-1 text-gray-500 text-sm">Records</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-sm text-gray-500">Waiting</div>
+          <div class="mt-2 heading text-3xl font-bold">${waiting}</div>
+          <div class="mt-1 text-amber-600 text-sm">Pending</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-sm text-gray-500">Ready / Done</div>
+          <div class="mt-2 heading text-3xl font-bold">${ready + done}</div>
+          <div class="mt-1 text-emerald-600 text-sm">${ready} ready, ${done} done</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-sm text-gray-500">Revenue Impact</div>
+          <div class="mt-2 heading text-3xl font-bold">${fmt(total)}</div>
+          <div class="mt-1 text-gray-500 text-sm">Refunds + write-offs (demo)</div>
+        </div>`;
+    }
+
+    let statusChart, dailyChart;
+
+    function renderCharts(rows){
+      const css = getComputedStyle(document.documentElement);
+      const primary = css.getPropertyValue('--primary').trim();
+
+      // Status counts
+      const statuses = ['Draft','Waiting','Ready','Done'];
+      const counts = statuses.map(s=>rows.filter(r=>r.status===s).length);
+
+      const byDateMap = {};
+      rows.forEach(r => { byDateMap[r.date] = (byDateMap[r.date]||0)+1; });
+      const dates = Object.keys(byDateMap).sort();
+      const series = dates.map(d=>byDateMap[d]);
+
+      // Status doughnut
+      if(statusChart) statusChart.destroy();
+      statusChart = new Chart(document.getElementById('statusChart'), {
+        type:'doughnut',
+        data:{
+          labels: statuses,
+          datasets: [{
+            data: counts,
+            backgroundColor:[
+              'rgba(31,41,55,.15)', primary, 'rgba(16,185,129,.7)', 'rgba(244,63,94,.7)'
+            ],
+            borderWidth:0
+          }]
+        },
+        options:{ plugins:{ legend:{ position:'bottom' } }, cutout:'65%' }
+      });
+
+      // Daily line
+      if(dailyChart) dailyChart.destroy();
+      dailyChart = new Chart(document.getElementById('dailyChart'), {
+        type:'line',
+        data:{ labels: dates, datasets:[{
+          label:'Returns', data: series, tension:.35, borderColor: primary,
+          backgroundColor: primary + '33', fill:true, pointRadius:2.8
+        }]},
+        options:{
+          plugins:{ legend:{ display:false } },
+          scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,.06)' }, ticks:{ stepSize:1 } } }
+        }
+      });
+    }
+
+    function refresh(){
+      const rows = applyFilters();
+      renderTable(rows);
+      renderKPIs(rows);
+      renderCharts(rows);
+      return rows;
+    }
+
+    // ----- Events -----
+    // Profile dropdown
+    const profileBtn = document.getElementById('profileBtn');
+    const profileMenu = document.getElementById('profileMenu');
+    profileBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const open = !profileMenu.classList.contains('hidden');
+      profileMenu.classList.toggle('hidden', open);
+      profileBtn.setAttribute('aria-expanded', String(!open));
+    });
+    document.addEventListener('click', ()=>profileMenu.classList.add('hidden'));
+
+    // Top search
+    byId('globalSearch').addEventListener('input', e => { topSearchText = e.target.value.trim(); refresh(); });
+
+    // Table search
+    byId('tableSearch').addEventListener('input', e => { tableSearchText = e.target.value.trim(); refresh(); });
+
+    // Filters
+    byId('applyBtn').addEventListener('click', ()=>{
+      filters = {
+        ...filters,
+        from: byId('fFrom').value,
+        to: byId('fTo').value,
+        reportType: byId('fReportType').value,
+        product: byId('fProduct').value.trim(),
+        resp: byId('fResp').value,
+        type: byId('fType').value,
+      };
+      filters.text = ''; // (reserved)
+      refresh();
+    });
+
+    byId('resetBtn').addEventListener('click', ()=>{
+      ['fFrom','fTo','fProduct'].forEach(id=>byId(id).value='');
+      byId('fReportType').value='Returns';
+      byId('fResp').value='Any';
+      byId('fType').value='All';
+      filters = {text:'', from:'', to:'', reportType:'Returns', product:'', resp:'Any', type:'All'};
+      topSearchText=''; tableSearchText='';
+      byId('globalSearch').value=''; byId('tableSearch').value='';
+      refresh();
+    });
+
+    // Simple demos for actions
+    byId('availabilityBtn').addEventListener('click', ()=>alert('Availability checked (demo).'));
+    byId('confirmBtn').addEventListener('click', ()=>alert('Confirmed (demo).'));
+    byId('cancelBtn').addEventListener('click', ()=>alert('Cancelled (demo).'));
+
+    // Export current view (CSV)
+    byId('exportBtn').addEventListener('click', ()=>{
+      const rows = applyFilters();
+      const csv = ['Return#,Customer,Date,Responsible,Type,Total,Status']
+        .concat(rows.map(r=>[r.id,r.customer,r.date,r.responsible,r.type,r.total,r.status].join(',')))
+        .join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download='reporting.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Download chart data CSV
+    byId('dlCsv').addEventListener('click', (e)=>{
+      e.preventDefault();
+      const rows = applyFilters();
+      const byDate = {};
+      rows.forEach(r=>{ byDate[r.date]=(byDate[r.date]||0)+1; });
+      const dates = Object.keys(byDate).sort();
+      const csv = ['Date,Returns'].concat(dates.map(d=>`${d},${byDate[d]}`)).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='daily_returns.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Nav active state (visual only)
+    document.getElementById('topNav').addEventListener('click', (e)=>{
+      const a = e.target.closest('a'); if(!a) return;
+      [...document.querySelectorAll('#topNav a')].forEach(x=>x.classList.remove('nav-active-pill'));
+      a.classList.add('nav-active-pill');
+      e.preventDefault(); // no routing in demo
+    });
+
+    // Initial paint
+    refresh();
+  </script>
+</body>
+</html>

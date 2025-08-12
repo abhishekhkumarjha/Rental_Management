@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>RentalShop • Orders</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet"/>
+
+  <!-- Theme -->
+  <style type="text/tailwindcss">
+    :root{
+      --cyan:#06B6D4; --cyan-hover:#0891B2;
+      --bg-deep:#061222; --bg-bluegray:#0D3042;
+      --heading:#1F2937; --body:#6B7280;
+      --input-bg:#F9FAFB; --input-border:#D1D5DB; --icon:#9CA3AF;
+    }
+    html,body{height:100%}
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      color:var(--body);
+      background:
+        radial-gradient(circle at 20% 50%, rgba(6,182,212,.10) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(6,182,212,.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(13,48,66,.30) 0%, transparent 50%),
+        linear-gradient(135deg, #061222 0%, #0D3042 50%, #134E4A 100%);
+      min-height:100dvh; overflow-x:hidden;
+    }
+    .glass {
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .btn-primary{@apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition; background:var(--cyan)}
+    .btn-primary:hover{ background:var(--cyan-hover) }
+    .chip{@apply rounded-md px-3 py-2 text-sm font-medium transition text-white/90}
+    .chip:hover{ background:rgba(255,255,255,.10) }
+    .chip.active{ background:white; color:var(--heading) }
+    .card{@apply rounded-2xl bg-white shadow-lg border; border-color:#EEF2F7}
+    .h-title{ color:var(--heading) } .muted{ color:var(--body) }
+    .input{
+      @apply w-full rounded-md px-3 py-2 text-sm;
+      background:var(--input-bg); border:1px solid var(--input-border); color:var(--heading);
+    }
+    .input:focus{ outline:none; box-shadow:0 0 0 3px rgba(6,182,212,.35); border-color:var(--cyan) }
+    .status-quotation{ background-color:#2563EB; color:#fff }
+    .status-pickedup{ background-color:#F59E0B; color:#fff }
+    .status-returned{ background-color:#10B981; color:#fff }
+    .status-reserved{ background-color:#EF4444; color:#fff }
+    .status-quotation-sent{ background-color:#8B5CF6; color:#fff }
+
+    .slidein{ transform:translateY(8px); opacity:0; }
+    .slidein.show{ transform:translateY(0); opacity:1; transition:transform .2s ease, opacity .2s ease; }
+
+    /* simple dropdown panel base */
+    .menu{ @apply absolute right-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black/5 opacity-0 invisible pointer-events-none transition; }
+    .menu.open{ @apply opacity-100 visible pointer-events-auto; }
+  </style>
+</head>
+<body>
+  <div class="min-h-dvh">
+    <!-- Header -->
+    <header class="sticky top-0 z-40">
+      <div class="glass">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="h-16 flex items-center justify-between">
+            <!-- Left: Home + Nav -->
+            <div class="flex items-center gap-1 sm:gap-2">
+              <a href="#" class="h-10 w-10 rounded-xl flex items-center justify-center text-white" style="background:#06B6D4" aria-label="Home">
+                <span class="material-icons">home</span>
+              </a>
+              <nav class="hidden md:flex gap-1" id="main-nav">
+                <a class="chip" href="admin_dashboard.html" data-nav="dashboard">Dashboard</a>
+                <a class="chip" href="admin_rental.html" data-nav="rental">Rental</a>
+                <!-- ORDER is selected -->
+                <a class="chip active" href="admin_order.html" data-nav="order">Order</a>
+                <a class="chip" href="admin_product.html" data-nav="products">Products</a>
+                <a class="chip" href="admin_reporting.html" data-nav="reporting">Reporting</a>
+                <a class="chip" href="admin-setting.html" data-nav="setting">Setting</a>
+              </nav>
+            </div>
+
+            <!-- Right: Search + Profile (with dropdown) -->
+            <div class="flex items-center gap-3">
+              <div class="hidden sm:block relative">
+                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-white/70">search</span>
+                <input class="pl-10 pr-3 py-2 rounded-md text-sm text-white/90 placeholder-white/70 bg-white/10 ring-1 ring-white/20 focus:ring-2 focus:ring-[var(--cyan)] focus:outline-none" placeholder="Search orders…" />
+              </div>
+
+              <div class="relative" id="profile-root">
+                <button id="profile-btn" class="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/15 px-2 py-1.5 ring-1 ring-white/20" aria-haspopup="true" aria-expanded="false">
+                  <span class="h-8 w-8 rounded-full inline-grid place-items-center ring-2 ring-white/30" style="background:#06B6D4">
+                    <span class="material-icons text-white">person</span>
+                  </span>
+                  <span class="hidden sm:block text-sm text-white/90">Adam</span>
+                  <span class="material-icons text-white/85">expand_more</span>
+                </button>
+
+                <!-- Dropdown (Settings removed) -->
+                <div id="profile-menu" class="menu">
+                  <div class="px-4 py-3">
+                    <p class="text-sm text-gray-500">Signed in as</p>
+                    <p class="text-sm font-medium text-gray-900 truncate"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="234247424e63465b424e534f460d404c4e">[email&#160;protected]</a></p>
+                  </div>
+                  <div class="py-1">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><span class="material-icons-outlined align-[-4px] mr-2 text-gray-400">person</span> Profile</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><span class="material-icons-outlined align-[-4px] mr-2 text-gray-400">help</span> Help</a>
+                  </div>
+                  <div class="py-1 border-t border-gray-100">
+                    <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><span class="material-icons-outlined align-[-4px] mr-2 text-red-400">logout</span> Sign out</button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="md:hidden h-10 w-10 rounded-xl flex items-center justify-center text-white/90 hover:bg-white/10" aria-label="Menu">
+                <span class="material-icons">menu</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mobile search -->
+          <div class="sm:hidden pb-4">
+            <div class="relative">
+              <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-white/70">search</span>
+              <input class="pl-10 pr-3 py-2 w-full rounded-md text-sm text-white/90 placeholder-white/70 bg-white/10 ring-1 ring-white/20 focus:ring-2 focus:ring-[var(--cyan)] focus:outline-none" placeholder="Search orders…" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main container -->
+    <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+
+      <!-- =============== ORDERS LIST VIEW (default) =============== -->
+      <section id="orders-view" class="space-y-6 slidein show">
+        <!-- Toolbar -->
+        <div class="card p-4 sm:p-5">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-3">
+              <button id="create-btn" class="btn-primary">
+                <span class="material-icons-outlined text-base">add</span>
+                Create
+              </button>
+              <h1 class="text-xl font-semibold h-title">Rental Orders</h1>
+
+              <!-- Settings (now a working menu for Duplicate/Delete) -->
+              <div class="relative">
+                <button id="gear-btn" class="rounded-full p-1.5 hover:bg-gray-100" title="Actions">
+                  <span class="material-icons-outlined text-[var(--icon)]">settings</span>
+                </button>
+                <div id="gear-menu" class="menu w-48">
+                  <button id="action-duplicate" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:text-gray-400" disabled>
+                    <span class="material-icons-outlined align-[-4px] mr-2 text-gray-400">content_copy</span> Duplicate selected
+                  </button>
+                  <button id="action-delete" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:text-red-300" disabled>
+                    <span class="material-icons-outlined align-[-4px] mr-2 text-red-400">delete</span> Delete selected
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                <input id="search" class="input pl-10 w-64" placeholder="Search..." />
+              </div>
+
+              <div class="flex items-center gap-2 rounded-md border px-3 py-2">
+                <span id="pager" class="text-sm muted">0/0</span>
+                <button class="rounded-md hover:bg-gray-50 px-2 py-1" id="prev-page">
+                  <span class="material-icons-outlined text-[var(--icon)] text-base">chevron_left</span>
+                </button>
+                <button class="rounded-md hover:bg-gray-50 px-2 py-1" id="next-page">
+                  <span class="material-icons-outlined text-[var(--icon)] text-base">chevron_right</span>
+                </button>
+              </div>
+
+              <!-- View toggle: now functional -->
+              <div class="flex items-center gap-1 rounded-md border p-1">
+                <button id="btnCardView" class="p-1.5 rounded-md hover:bg-gray-50" title="Card view">
+                  <span class="material-icons-outlined text-[var(--icon)]">shopping_cart</span>
+                </button>
+                <button id="btnListView" class="p-1.5 rounded-md bg-[var(--cyan)] text-white" title="List view">
+                  <span class="material-icons-outlined">list</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div id="orders-layout" class="grid grid-cols-1 lg:grid-cols-[16rem_1fr] gap-6">
+          <!-- Sidebar filters -->
+          <aside id="sidebar" class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="h-title font-semibold">RENTAL STATUS</h2>
+              <button id="sidebarToggle" class="rounded-md hover:bg-gray-50 p-1" title="Collapse sidebar">
+                <span class="material-icons-outlined text-[var(--icon)]">chevron_left</span>
+              </button>
+            </div>
+            <ul class="space-y-1" id="status-filters">
+              <li data-status="ALL" class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">ALL</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5" id="count-all">0</span>
+              </li>
+              <li data-status="Quotation" class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">Quotation</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5" id="count-Quotation">0</span>
+              </li>
+              <li data-status="Reserved" class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">Reserved</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5" id="count-Reserved">0</span>
+              </li>
+              <li data-status="Pickedup" class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">Pickedup</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5" id="count-Pickedup">0</span>
+              </li>
+              <li data-status="Returned" class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">Returned</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5" id="count-Returned">0</span>
+              </li>
+            </ul>
+
+            <div class="border-t my-4"></div>
+
+            <h2 class="h-title font-semibold mb-2">INVOICE STATUS</h2>
+            <ul class="space-y-1">
+              <li class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">Fully Invoiced</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">2</span>
+              </li>
+              <li class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">Nothing to invoice</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">2</span>
+              </li>
+              <li class="flex items-center justify-between py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                <a class="h-title">To invoice</a><span class="text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">2</span>
+              </li>
+            </ul>
+          </aside>
+
+          <!-- List / Card panel -->
+          <div class="card overflow-hidden">
+            <!-- LIST HEADER -->
+            <div id="list-head" class="grid grid-cols-[40px_1.5fr_2fr_2fr_1.5fr_1fr_1fr_40px] items-center p-4 border-b text-sm font-semibold text-gray-500">
+              <input id="master" type="checkbox" class="rounded border-gray-300 text-[var(--cyan)] focus:ring-[var(--cyan)]"/>
+              <div>Order Reference</div>
+              <div>Customer</div>
+              <div>Created by User</div>
+              <div>Rental Status</div>
+              <div class="text-right">Tax</div>
+              <div class="text-right">Total</div>
+              <div></div>
+            </div>
+
+            <!-- LIST BODY -->
+            <div id="list-body" class="divide-y"></div>
+
+            <!-- CARD VIEW -->
+            <div id="card-body" class="hidden p-4">
+              <div id="card-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============== ORDER FORM VIEW (hidden until Create) =============== -->
+      <section id="order-form-view" class="hidden slidein">
+        <div class="card p-4 sm:p-6 mb-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <button id="back-to-list" class="rounded-md border px-3 py-2 hover:bg-gray-50">
+                <span class="material-icons-outlined text-[var(--icon)] align-[-4px]">arrow_back</span>
+                <span class="sr-only">Back</span>
+              </button>
+              <h2 class="text-2xl font-bold h-title">Rental Order Form</h2>
+            </div>
+            <span class="text-sm muted">Draft • R0001</span>
+          </div>
+
+          <!-- Form -->
+          <form id="rental-form" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium h-title">Customer Name</label>
+              <input type="text" class="mt-1 input" placeholder="Enter customer name">
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Invoice Address</label>
+              <input type="text" class="mt-1 input" placeholder="Enter invoice address">
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Delivery Address</label>
+              <input type="text" class="mt-1 input" placeholder="Enter delivery address">
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Rental Template</label>
+              <select class="mt-1 input">
+                <option>Select template</option>
+                <option>Template A</option>
+                <option>Template B</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Expiration Date</label>
+              <input type="date" class="mt-1 input">
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Rental Order Date</label>
+              <input type="date" class="mt-1 input">
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Pricelist</label>
+              <select class="mt-1 input">
+                <option>Select pricelist</option>
+                <option>Standard</option>
+                <option>Premium</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Rental Period (days)</label>
+              <input type="number" class="mt-1 input" placeholder="e.g. 7">
+            </div>
+            <div>
+              <label class="block text-sm font-medium h-title">Rental Duration (weeks)</label>
+              <input type="number" class="mt-1 input" placeholder="e.g. 4">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium h-title">Notes</label>
+              <textarea rows="4" class="mt-1 input" placeholder="Additional notes..."></textarea>
+            </div>
+            <div class="md:col-span-2 flex gap-4">
+              <button type="submit" class="btn-primary">Submit Order</button>
+              <button type="reset" id="reset-form" class="rounded-md border px-4 py-2 text-sm h-title hover:bg-gray-50">Reset</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- JS: dropdown + data + list/card rendering + actions -->
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // -------- Profile dropdown (Settings removed) --------
+    (() => {
+      const btn = document.getElementById('profile-btn');
+      const menu = document.getElementById('profile-menu');
+      const root = document.getElementById('profile-root');
+      const toggle = () => menu.classList.toggle('open');
+      const close  = () => menu.classList.remove('open');
+      btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+      document.addEventListener('click', (e) => { if(!root.contains(e.target)) close(); });
+      document.addEventListener('keydown', (e) => { if(e.key === 'Escape') close(); });
+    })();
+
+    // -------- State --------
+    let orders = [
+      {ref:'R0001', customer:'Customer 1', user:'Adam', status:'Quotation', tax:200, total:2200},
+      {ref:'R0002', customer:'Customer 2', user:'Adam', status:'Pickedup', tax:100, total:1100},
+      {ref:'R0003', customer:'Customer 3', user:'Adam', status:'Returned', tax:200, total:2200},
+      {ref:'R0004', customer:'Customer 4', user:'Adam', status:'Reserved', tax:200, total:2200},
+      {ref:'R0005', customer:'Customer 5', user:'Adam', status:'Quotation sent', tax:200, total:2200},
+      {ref:'R0006', customer:'Customer 6', user:'Adam', status:'Returned', tax:200, total:2200},
+    ];
+    let currentView = 'list'; // 'list' | 'cards'
+    let selected = new Set();
+    let filterStatus = 'ALL';
+    let searchTerm = '';
+
+    // -------- Elements --------
+    const ordersView = document.getElementById('orders-view');
+    const formView = document.getElementById('order-form-view');
+    const createBtn = document.getElementById('create-btn');
+    const backBtn = document.getElementById('back-to-list');
+    const formEl = document.getElementById('rental-form');
+    const resetBtn = document.getElementById('reset-form');
+
+    const listHead = document.getElementById('list-head');
+    const listBody = document.getElementById('list-body');
+    const master   = document.getElementById('master');
+    const cardBody = document.getElementById('card-body');
+    const cardGrid = document.getElementById('card-grid');
+
+    const btnCardView = document.getElementById('btnCardView');
+    const btnListView = document.getElementById('btnListView');
+
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const layout = document.getElementById('orders-layout');
+
+    const gearBtn = document.getElementById('gear-btn');
+    const gearMenu = document.getElementById('gear-menu');
+    const actionDuplicate = document.getElementById('action-duplicate');
+    const actionDelete = document.getElementById('action-delete');
+
+    const statusFilters = document.getElementById('status-filters');
+    const searchInput = document.getElementById('search');
+    const pager = document.getElementById('pager');
+    const prevPage = document.getElementById('prev-page');
+    const nextPage = document.getElementById('next-page');
+
+    // Simple paging (client-side demo)
+    let page = 1, perPage = 50;
+
+    // -------- Helpers --------
+    const statusClass = (s) => {
+      switch(s){
+        case 'Quotation': return 'status-quotation';
+        case 'Pickedup': return 'status-pickedup';
+        case 'Returned': return 'status-returned';
+        case 'Reserved': return 'status-reserved';
+        case 'Quotation sent': return 'status-quotation-sent';
+        default: return 'status-quotation';
+      }
+    };
+
+    const nextRef = () => {
+      // find highest numeric ref and increment
+      const n = orders.reduce((max,o)=>{
+        const m = parseInt(o.ref.replace('R',''),10);
+        return Math.max(max, isNaN(m)?0:m);
+      }, 0) + 1;
+      return 'R' + String(n).padStart(4,'0');
+    };
+
+    const filtered = () => {
+      return orders.filter(o => {
+        const matchStatus = (filterStatus==='ALL') ? true :
+          (filterStatus==='Quotation sent' ? o.status==='Quotation sent' : o.status===filterStatus);
+        const q = searchTerm.trim().toLowerCase();
+        const matchSearch = !q || (o.ref.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q) || o.user.toLowerCase().includes(q));
+        return matchStatus && matchSearch;
+      });
+    };
+
+    const updateCounts = () => {
+      const all = orders.length;
+      const counts = {Quotation:0, Reserved:0, Pickedup:0, Returned:0, 'Quotation sent':0};
+      orders.forEach(o => { if(counts[o.status]!==undefined) counts[o.status]++; });
+      document.getElementById('count-all').textContent = all;
+      Object.keys(counts).forEach(k=>{
+        const el = document.getElementById('count-'+k.replace(' ','_')) || document.getElementById('count-'+k);
+        if (el) el.textContent = counts[k];
+      });
+    };
+
+    const setViewButtons = () => {
+      if(currentView==='list'){
+        btnListView.classList.add('bg-[var(--cyan)]','text-white');
+        btnCardView.classList.remove('bg-[var(--cyan)]','text-white');
+      }else{
+        btnCardView.classList.add('bg-[var(--cyan)]','text-white');
+        btnListView.classList.remove('bg-[var(--cyan)]','text-white');
+      }
+    };
+
+    const setActionsEnabled = () => {
+      const any = selected.size > 0;
+      [actionDuplicate, actionDelete].forEach(b=>{
+        b.disabled = !any;
+      });
+    };
+
+    // -------- Renderers --------
+    const render = () => {
+      updateCounts();
+      const rows = filtered();
+      const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+      page = Math.min(page, totalPages);
+      pager.textContent = `${(rows.length ? ((page-1)*perPage+1) : 0)}-${Math.min(page*perPage, rows.length)}/${rows.length}`;
+
+      const pageRows = rows.slice((page-1)*perPage, page*perPage);
+
+      // list vs cards
+      if(currentView==='list'){
+        listHead.classList.remove('hidden');
+        listBody.classList.remove('hidden');
+        cardBody.classList.add('hidden');
+
+        // Master checkbox state
+        master.checked = pageRows.length>0 && pageRows.every(o => selected.has(o.ref));
+        master.indeterminate = pageRows.some(o => selected.has(o.ref)) && !master.checked;
+
+        listBody.innerHTML = pageRows.map(o => `
+          <div class="grid grid-cols-[40px_1.5fr_2fr_2fr_1.5fr_1fr_1fr_40px] items-center p-4 hover:bg-gray-50">
+            <input data-ref="${o.ref}" type="checkbox" class="rowcb rounded border-gray-300 text-[var(--cyan)] focus:ring-[var(--cyan)]" ${selected.has(o.ref)?'checked':''}/>
+            <div class="font-semibold h-title">${o.ref}</div>
+            <div class="h-title">${o.customer}</div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-[var(--cyan)] text-white grid place-items-center text-xs">${o.user?.[0]||'U'}</div>
+              <span class="muted">${o.user}</span>
+            </div>
+            <div><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass(o.status)}">${o.status}</span></div>
+            <div class="text-right muted">₹ ${o.tax.toFixed(2)}</div>
+            <div class="text-right h-title font-semibold">₹ ${o.total.toFixed(2)}</div>
+            <button class="justify-self-center rounded-md hover:bg-gray-50 p-1"><span class="material-icons-outlined text-[var(--icon)] text-xl">more_vert</span></button>
+          </div>
+        `).join('');
+
+        // row checkboxes
+        listBody.querySelectorAll('.rowcb').forEach(cb=>{
+          cb.addEventListener('change', (e)=>{
+            const ref = e.target.getAttribute('data-ref');
+            if(e.target.checked) selected.add(ref); else selected.delete(ref);
+            setActionsEnabled();
+            render(); // update master state
+          });
+        });
+
+      } else {
+        listHead.classList.add('hidden');
+        listBody.classList.add('hidden');
+        cardBody.classList.remove('hidden');
+
+        cardGrid.innerHTML = pageRows.map(o => `
+          <div class="rounded-xl border p-4 hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="text-sm muted">Order</div>
+                <div class="text-lg font-semibold h-title">${o.ref}</div>
+              </div>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass(o.status)}">${o.status}</span>
+            </div>
+            <div class="mt-3 space-y-1 text-sm">
+              <div class="flex justify-between"><span class="muted">Customer</span><span class="h-title">${o.customer}</span></div>
+              <div class="flex justify-between"><span class="muted">User</span><span class="h-title">${o.user}</span></div>
+              <div class="flex justify-between"><span class="muted">Tax</span><span class="h-title">₹ ${o.tax.toFixed(2)}</span></div>
+              <div class="flex justify-between"><span class="muted">Total</span><span class="h-title font-semibold">₹ ${o.total.toFixed(2)}</span></div>
+            </div>
+            <div class="mt-3 flex items-center justify-between">
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input data-ref="${o.ref}" type="checkbox" class="cardcb rounded border-gray-300 text-[var(--cyan)] focus:ring-[var(--cyan)]" ${selected.has(o.ref)?'checked':''}/>
+                <span class="muted">Select</span>
+              </label>
+              <button class="btn-primary text-xs px-3 py-1.5">Open</button>
+            </div>
+          </div>
+        `).join('');
+
+        cardGrid.querySelectorAll('.cardcb').forEach(cb=>{
+          cb.addEventListener('change',(e)=>{
+            const ref = e.target.getAttribute('data-ref');
+            if(e.target.checked) selected.add(ref); else selected.delete(ref);
+            setActionsEnabled();
+          });
+        });
+      }
+    };
+
+    // -------- Interactions --------
+    // Create / Back / Reset
+    function showForm(){
+      ordersView.classList.add('hidden');
+      formView.classList.remove('hidden');
+      requestAnimationFrame(()=> formView.classList.add('show'));
+    }
+    function showList(){
+      formView.classList.add('hidden');
+      ordersView.classList.remove('hidden');
+      requestAnimationFrame(()=> ordersView.classList.add('show'));
+    }
+    createBtn.addEventListener('click', showForm);
+    backBtn.addEventListener('click', showList);
+    resetBtn.addEventListener('click', (e)=>{ e.preventDefault(); formEl.reset(); showList(); });
+    formEl.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // add a quick demo row on submit
+      const ref = nextRef();
+      orders.unshift({ref, customer:'New Customer', user:'Adam', status:'Quotation', tax:0, total:0});
+      showList();
+      render();
+      selected.clear(); setActionsEnabled();
+    });
+
+    // View toggle
+    btnCardView.addEventListener('click', ()=>{ currentView='cards'; setViewButtons(); render(); });
+    btnListView.addEventListener('click', ()=>{ currentView='list';  setViewButtons(); render(); });
+
+    // Sidebar collapse
+    sidebarToggle.addEventListener('click', ()=>{
+      const hidden = sidebar.classList.toggle('hidden');
+      if(hidden){
+        layout.classList.remove('lg:grid-cols-[16rem_1fr]');
+        layout.classList.add('lg:grid-cols-1');
+      } else {
+        layout.classList.add('lg:grid-cols-[16rem_1fr]');
+        layout.classList.remove('lg:grid-cols-1');
+      }
+    });
+
+    // Master checkbox
+    master.addEventListener('change', (e)=>{
+      const rows = filtered().slice((page-1)*perPage, page*perPage);
+      if(e.target.checked){ rows.forEach(o=>selected.add(o.ref)); }
+      else { rows.forEach(o=>selected.delete(o.ref)); }
+      setActionsEnabled();
+      render();
+    });
+
+    // Search
+    searchInput.addEventListener('input', (e)=>{ searchTerm = e.target.value; page=1; render(); });
+
+    // Status filters
+    statusFilters.querySelectorAll('li').forEach(li=>{
+      li.addEventListener('click', ()=>{
+        filterStatus = li.getAttribute('data-status');
+        page=1; render();
+      });
+    });
+
+    // Simple pager (no real pages in demo, but wired)
+    prevPage.addEventListener('click', ()=>{ page=Math.max(1,page-1); render(); });
+    nextPage.addEventListener('click', ()=>{ page=page+1; render(); });
+
+    // Gear menu open/close
+    gearBtn.addEventListener('click', (e)=>{ e.stopPropagation(); gearMenu.classList.toggle('open'); });
+    document.addEventListener('click', ()=> gearMenu.classList.remove('open'));
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') gearMenu.classList.remove('open'); });
+
+    // Duplicate/Delete actions
+    actionDuplicate.addEventListener('click', ()=>{
+      const refs = Array.from(selected);
+      refs.forEach(r=>{
+        const src = orders.find(o=>o.ref===r);
+        if(src){
+          const copy = {...src, ref: nextRef()};
+          orders.unshift(copy);
+        }
+      });
+      selected.clear(); setActionsEnabled();
+      render();
+      gearMenu.classList.remove('open');
+    });
+
+    actionDelete.addEventListener('click', ()=>{
+      if(!selected.size) return;
+      orders = orders.filter(o=>!selected.has(o.ref));
+      selected.clear(); setActionsEnabled();
+      render();
+      gearMenu.classList.remove('open');
+    });
+
+    // Enable/disable action buttons based on selection
+    document.addEventListener('change', ()=> setActionsEnabled());
+
+    // Init
+    setViewButtons();
+    setActionsEnabled();
+    updateCounts();
+    render();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96db9fb83ef557f0',t:'MTc1NDk1NjEwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

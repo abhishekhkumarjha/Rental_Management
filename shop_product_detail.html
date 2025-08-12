@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>RentalShop • Product Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+  :root{
+    --primary:#06B6D4; --primary-hover:#0891B2;
+    --bg-deep:#061222; --bg-bluegray:#0D3042;
+    --heading:#1F2937; --body:#6B7280;
+    --input-bg:#F9FAFB; --input-border:#D1D5DB;
+  }
+  html,body{height:100%}
+  body{
+    @apply text-[15px] antialiased;
+    color:var(--body);
+    background:
+      radial-gradient(1200px 800px at 20% 0%, rgba(6,182,212,.08), transparent 60%),
+      radial-gradient(900px 700px at 80% 100%, rgba(8,145,178,.08), transparent 60%),
+      linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-bluegray) 100%);
+    background-attachment:fixed;
+  }
+  .bg-waves::before{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.35;
+    background-image:url('data:image/svg+xml;utf8,\
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 600" preserveAspectRatio="none">\
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">\
+          <stop stop-color="%2306B6D4" stop-opacity="0.25"/><stop offset="1" stop-color="%230D3042" stop-opacity="0.1"/>\
+        </linearGradient></defs>\
+        <path d="M0,120 C240,200 480,40 720,100 C960,160 1200,40 1440,120 L1440,0 L0,0 Z" fill="url(%23g)"/>\
+        <path d="M0,480 C220,420 520,560 760,500 C1000,440 1210,560 1440,500 L1440,600 L0,600 Z" fill="url(%23g)"/>\
+      </svg>');
+    background-size:cover; background-position:center; filter:blur(2px);
+  }
+  .card{@apply bg-white rounded-2xl shadow-xl shadow-black/10}
+  .heading{color:var(--heading)}
+  .input{background:var(--input-bg); border:1px solid var(--input-border); @apply rounded-xl px-3 py-2 outline-none transition}
+  .input:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(6,182,212,.25)}
+  .btn-primary{background:var(--primary); color:#fff; @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 font-medium transition}
+  .btn-primary:hover{background:var(--primary-hover)}
+  .btn-ghost{@apply rounded-xl px-4 py-2 font-medium text-white border border-white/30 hover:bg-white/10 transition}
+  .btn-soft{@apply rounded-xl px-3 py-2 font-medium bg-gray-100 text-gray-800 hover:bg-gray-200}
+  .topbar{@apply sticky top-0 z-30 backdrop-blur bg-white/5}
+  .pill{@apply rounded-2xl border px-3 py-2 text-white/90 bg-white/10 border-white/20}
+  .pill-active{@apply bg-white text-[#0F172A]}
+  .brand-home{ @apply h-10 w-10 rounded-2xl grid place-items-center; background: var(--primary); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 8px 20px -10px rgba(6,182,212,.8); }
+  .search-glass{ @apply rounded-2xl border px-4 py-2 pl-10 text-white/95 min-w-[260px]; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); border-color: rgba(255,255,255,.25); }
+  .search-glass::placeholder{ color: rgba(255,255,255,.75); }
+  .chip{ @apply inline-flex items-center rounded-full text-xs px-2 py-1 bg-gray-100 text-gray-700 }
+  .menu{ @apply absolute mt-2 w-48 bg-white rounded-xl shadow-xl shadow-black/10 overflow-hidden z-20 }
+  .menu a{ @apply block px-3 py-2 text-sm text-[#111827] hover:bg-gray-100 }
+</style>
+</head>
+<body>
+<div class="bg-waves absolute inset-0 -z-10"></div>
+
+<!-- HEADER -->
+<header class="topbar">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
+    <div class="h-16 grid grid-cols-[auto,1fr,auto] items-center gap-4">
+      <div class="brand-home">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z"/></svg>
+      </div>
+
+      <nav class="flex items-center gap-2">
+        <a href="#" class="pill">Home</a>
+        <a href="#" class="pill pill-active">Rental Shop</a>
+        <a href="#" class="pill">Wishlist</a>
+      </nav>
+
+      <div class="flex items-center gap-3 justify-self-end">
+        <div class="relative">
+          <input class="search-glass" type="search" placeholder="Search products…">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        </div>
+
+        <!-- Cart -->
+        <button id="cartBtn" class="relative rounded-full h-10 w-10 grid place-items-center bg-white/10 border border-white/20 text-white">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 12.39A2 2 0 0 0 9.62 15H19a2 2 0 0 0 2-1.59l1.38-7.41H6"/></svg>
+          <span id="cartBadge" class="absolute -top-1 -right-1 text-xs bg-[var(--primary)] text-white rounded-full px-1.5 py-0.5">0</span>
+        </button>
+
+        <!-- Profile -->
+        <div class="relative">
+          <button id="me" class="rounded-2xl border px-3 py-1.5 flex items-center gap-2 text-white/90 bg-white/10 border-white/25">
+            <span class="h-8 w-8 rounded-full grid place-items-center bg-[var(--primary)] text-white font-semibold">A</span> Adam
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="meMenu" class="menu hidden right-0">
+            <a href="#">Profile</a>
+            <a href="#">Orders</a>
+            <a href="#">Sign out</a>
+          </div>
+        </div>
+
+        <a class="btn-ghost" href="#">Contact us</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-4 lg:px-6 py-6">
+  <!-- Breadcrumb -->
+  <nav class="text-sm mb-4 text-white/80">
+    <a id="bcAll" href="#" class="underline decoration-dotted hover:text-white">All Products</a>
+    <span class="mx-2">›</span>
+    <span id="bcName" class="text-white">Professional Camera Kit</span>
+  </nav>
+
+  <div class="card p-6">
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Left: image, wishlist, description -->
+      <section>
+        <div class="aspect-square rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 grid place-items-center">
+          <!-- placeholder product icon -->
+          <div class="h-28 w-28 rounded-2xl grid place-items-center bg-white shadow-md">
+            <svg width="44" height="44" viewBox="0 0 24 24" stroke="#94a3b8" fill="none" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M8 3v6"/>
+            </svg>
+          </div>
+        </div>
+
+        <button id="wishBtn" class="mt-5 w-full btn-soft flex items-center justify-center gap-2" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500"><path d="M12 21s-6.72-4.35-9.33-8.24C.91 10.08 2.18 6 6.12 6 8.2 6 9.38 7.12 12 9.64 14.62 7.12 15.8 6 17.88 6c3.94 0 5.21 4.08 3.45 6.76C18.72 16.65 12 21 12 21z"/></svg>
+          <span>Add to wish list</span>
+        </button>
+
+        <div class="mt-6">
+          <h3 class="heading font-semibold">Product description</h3>
+          <p id="desc" class="mt-2 text-gray-600 line-clamp-4">
+            A professional 4K camera kit with a 24–70mm lens, extra batteries, charger, and carry case. Perfect for
+            commercial shoots, weddings, and studio work. Clean optics, recent firmware, and well-maintained.
+          </p>
+          <button id="readMore" class="link mt-1">Read more</button>
+        </div>
+      </section>
+
+      <!-- Right: details & actions -->
+      <section>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h1 id="pName" class="heading text-2xl font-bold">Professional Camera Kit</h1>
+            <div class="mt-1 text-gray-500">₹ <span id="price">1500</span> <span class="text-gray-400">/ per day</span></div>
+          </div>
+
+          <!-- Price list dropdown -->
+          <div class="relative">
+            <button id="plistBtn" class="btn-soft">Price List ▾</button>
+            <div id="plistMenu" class="menu hidden right-0">
+              <a href="#" data-price="1500" data-name="Standard">Standard (₹1500)</a>
+              <a href="#" data-price="2200" data-name="Pro">Pro (₹2200)</a>
+              <a href="#" data-price="1200" data-name="Weekend">Weekend (₹1200)</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="mt-5 grid grid-cols-[auto_1fr_auto_1fr] items-center gap-3">
+          <label class="text-gray-700">From</label>
+          <input id="from" type="date" class="input">
+          <label class="text-gray-700">to</label>
+          <input id="to" type="date" class="input">
+        </div>
+
+        <!-- Qty & Add to cart -->
+        <div class="mt-4 flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <button id="minus" class="btn-soft w-10" type="button">−</button>
+            <input id="qty" type="number" min="1" value="1" class="input w-16 text-center">
+            <button id="plus" class="btn-soft w-10" type="button">+</button>
+          </div>
+          <button id="addCart" class="btn-primary" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 12.39A2 2 0 0 0 9.62 15H19a2 2 0 0 0 2-1.59l1.38-7.41H6"/></svg>
+            Add to Cart
+          </button>
+        </div>
+
+        <!-- Coupon -->
+        <div class="mt-6">
+          <label class="block text-gray-700 mb-1">Apply Coupon</label>
+          <div class="flex gap-2">
+            <input id="coupon" class="input flex-1" placeholder="Coupon Code (try SAVE10)">
+            <button id="applyCoupon" class="btn-primary" type="button">Apply</button>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="mt-5 p-4 bg-gray-50 rounded-xl flex items-center justify-between">
+          <div>
+            <div class="text-gray-600">Subtotal: <span id="subtotal" class="font-medium text-gray-800">₹ 0</span></div>
+            <div class="text-gray-600">Discount: <span id="discount" class="font-medium text-gray-800">₹ 0</span></div>
+            <div class="text-gray-600">Tax (18%): <span id="tax" class="font-medium text-gray-800">₹ 0</span></div>
+          </div>
+          <div class="text-right">
+            <div class="text-gray-500 text-sm">Days: <span id="days">0</span></div>
+            <div class="heading text-xl font-bold">Total: <span id="total">₹ 0</span></div>
+          </div>
+        </div>
+
+        <!-- Terms & share -->
+        <div class="mt-6 grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="heading font-semibold">Terms & conditions</h4>
+            <ul class="mt-2 text-gray-600 list-disc pl-5 space-y-1">
+              <li>Valid government ID required at pickup.</li>
+              <li>Late returns billed at hourly rate after grace period.</li>
+              <li>Damage or loss at replacement cost.</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="heading font-semibold">Share</h4>
+            <div class="mt-2 flex gap-2">
+              <button id="copyLink" class="btn-soft" type="button">Copy Link</button>
+              <a id="shareTw" class="btn-soft" target="_blank" rel="noopener">Twitter</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ----- Small helpers -----
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+  const fmt = (n)=> '₹ ' + (Number(n)||0).toLocaleString('en-IN', {maximumFractionDigits:2});
+  const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
+
+  // ----- Profile dropdown -----
+  $('#me').addEventListener('click', e=>{
+    e.stopPropagation();
+    $('#meMenu').classList.toggle('hidden');
+  });
+  document.addEventListener('click', ()=>$('#meMenu').classList.add('hidden'));
+
+  // ----- Price list -----
+  const priceEl = $('#price');
+  const plistBtn = $('#plistBtn');
+  const plistMenu = $('#plistMenu');
+  let unitPrice = Number(priceEl.textContent);
+
+  plistBtn.addEventListener('click', (e)=>{ e.stopPropagation(); plistMenu.classList.toggle('hidden'); });
+  plistMenu.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const a = e.target.closest('a'); if(!a) return;
+    unitPrice = Number(a.dataset.price);
+    priceEl.textContent = unitPrice;
+    plistBtn.textContent = `Price List (${a.dataset.name}) ▾`;
+    plistMenu.classList.add('hidden');
+    calc();
+  });
+  document.addEventListener('click', ()=>plistMenu.classList.add('hidden'));
+
+  // ----- Dates, qty, coupon -----
+  const from = $('#from'), to = $('#to'), qty = $('#qty');
+  const daysEl = $('#days'), subtotalEl = $('#subtotal'), discountEl = $('#discount'), taxEl = $('#tax'), totalEl = $('#total');
+  const coupon = $('#coupon');
+
+  function dateDiffDays(a,b){
+    if(!a || !b) return 0;
+    const d1 = new Date(a), d2 = new Date(b);
+    const ms = d2 - d1;
+    if (Number.isNaN(ms) || ms < 0) return 0;
+    const diff = Math.ceil(ms / (1000*60*60*24)) || 0;
+    return Math.max(1, diff); // at least 1 day when same day
+  }
+
+  let couponPct = 0; // 0 or .10
+
+  function calc(){
+    const d = dateDiffDays(from.value, to.value);
+    const q = clamp(parseInt(qty.value||'1',10) || 1, 1, 999);
+    qty.value = q;
+    const sub = d * q * unitPrice;
+    const disc = Math.round(sub * couponPct);
+    const taxed = Math.round((sub - disc) * 0.18);
+    const total = sub - disc + taxed;
+    daysEl.textContent = d;
+    subtotalEl.textContent = fmt(sub);
+    discountEl.textContent = fmt(disc);
+    taxEl.textContent = fmt(taxed);
+    totalEl.textContent = fmt(total);
+  }
+
+  [from, to, qty].forEach(el => el.addEventListener('input', calc));
+  $('#minus').addEventListener('click', ()=>{ qty.value = clamp((parseInt(qty.value||'1',10)||1)-1,1,999); calc(); });
+  $('#plus').addEventListener('click',  ()=>{ qty.value = clamp((parseInt(qty.value||'1',10)||1)+1,1,999); calc(); });
+
+  $('#applyCoupon').addEventListener('click', ()=>{
+    const code = (coupon.value||'').trim().toUpperCase();
+    couponPct = (code === 'SAVE10') ? 0.10 : 0;
+    if(couponPct>0){ coupon.classList.remove('ring-red-500'); coupon.classList.add('ring-2','ring-green-400'); }
+    else{ coupon.classList.remove('ring-green-400'); coupon.classList.add('ring-2','ring-red-500'); }
+    setTimeout(()=>coupon.classList.remove('ring-2','ring-green-400','ring-red-500'), 1200);
+    calc();
+  });
+
+  // ----- Wishlist toggle -----
+  const wishKey = 'rs_wishlist';
+  const wishBtn = $('#wishBtn');
+  const productId = 'PRD-1001';
+  function isWished(){
+    const w = JSON.parse(localStorage.getItem(wishKey)||'[]');
+    return w.includes(productId);
+  }
+  function setWishUI(){
+    if(isWished()){
+      wishBtn.classList.remove('bg-gray-100','text-gray-800');
+      wishBtn.classList.add('bg-rose-100','text-rose-700');
+      wishBtn.querySelector('span').textContent = 'Added to wish list';
+    }else{
+      wishBtn.classList.add('bg-gray-100','text-gray-800');
+      wishBtn.classList.remove('bg-rose-100','text-rose-700');
+      wishBtn.querySelector('span').textContent = 'Add to wish list';
+    }
+  }
+  wishBtn.addEventListener('click', ()=>{
+    const w = new Set(JSON.parse(localStorage.getItem(wishKey)||'[]'));
+    if(w.has(productId)) w.delete(productId); else w.add(productId);
+    localStorage.setItem(wishKey, JSON.stringify([...w]));
+    setWishUI();
+  });
+
+  // ----- Cart badge & add to cart -----
+  const cartKey = 'rs_cart_count';
+  const cartBadge = $('#cartBadge');
+  function loadCart(){ cartBadge.textContent = localStorage.getItem(cartKey) || '0'; }
+  function addToCart(){
+    const cur = parseInt(localStorage.getItem(cartKey)||'0',10);
+    const add = clamp(parseInt(qty.value||'1',10)||1,1,999);
+    const next = cur + add;
+    localStorage.setItem(cartKey, String(next));
+    loadCart();
+    // tiny toast
+    $('#addCart').classList.add('scale-95'); setTimeout(()=>$('#addCart').classList.remove('scale-95'), 100);
+  }
+  $('#addCart').addEventListener('click', addToCart);
+
+  // ----- Share -----
+  $('#copyLink').addEventListener('click', async ()=>{
+    try { await navigator.clipboard.writeText(location.href); alert('Link copied!'); }
+    catch{ alert('Copy failed'); }
+  });
+  $('#shareTw').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check this gear at RentalShop: ')}&url=${encodeURIComponent(location.href)}`;
+
+  // ----- Breadcrumb actions (demo) -----
+  $('#bcAll').addEventListener('click', e=>{ e.preventDefault(); alert('Navigate to All Products listing'); });
+
+  // ----- Read more -----
+  const desc = $('#desc'), readMore = $('#readMore');
+  let expanded = false;
+  readMore.addEventListener('click', ()=>{
+    expanded = !expanded;
+    if(expanded){ desc.classList.remove('line-clamp-4'); readMore.textContent='Show less'; }
+    else{ desc.classList.add('line-clamp-4'); readMore.textContent='Read more'; }
+  });
+
+  // init
+  setWishUI(); loadCart(); calc();
+</script>
+</body>
+</html>

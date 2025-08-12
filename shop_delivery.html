@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>RentalShop • Delivery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+  :root{
+    --primary:#06B6D4; --primary-hover:#0891B2;
+    --bg-deep:#061222; --bg-bluegray:#0D3042;
+    --heading:#1F2937; --body:#6B7280;
+    --input-bg:#F9FAFB; --input-border:#D1D5DB;
+  }
+  html,body{height:100%}
+  body{
+    @apply text-[15px] antialiased;
+    color:var(--body);
+    background:
+      radial-gradient(1200px 800px at 20% 0%, rgba(6,182,212,.08), transparent 60%),
+      radial-gradient(900px 700px at 80% 100%, rgba(8,145,178,.08), transparent 60%),
+      linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-bluegray) 100%);
+    background-attachment:fixed;
+  }
+  .bg-waves::before{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.35;
+    background-image:url('data:image/svg+xml;utf8,\
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 600" preserveAspectRatio="none">\
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">\
+          <stop stop-color="%2306B6D4" stop-opacity="0.25"/><stop offset="1" stop-color="%230D3042" stop-opacity="0.1"/>\
+        </linearGradient></defs>\
+        <path d="M0,120 C240,200 480,40 720,100 C960,160 1200,40 1440,120 L1440,0 L0,0 Z" fill="url(%23g)"/>\
+        <path d="M0,480 C220,420 520,560 760,500 C1000,440 1210,560 1440,500 L1440,600 L0,600 Z" fill="url(%23g)"/>\
+      </svg>');
+    background-size:cover; background-position:center; filter:blur(2px);
+  }
+  .card{@apply bg-white rounded-2xl shadow-xl shadow-black/10}
+  .heading{color:var(--heading)}
+  .input{background:var(--input-bg); border:1px solid var(--input-border); @apply rounded-2xl px-3 py-2 outline-none transition}
+  .input:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(6,182,212,.25)}
+  .btn-primary{background:var(--primary); color:#fff; @apply inline-flex items-center gap-2 rounded-2xl px-4 py-2 font-medium transition}
+  .btn-primary:hover{background:var(--primary-hover)}
+  .btn-soft{@apply rounded-2xl px-3 py-2 font-medium bg-gray-100 text-gray-800 hover:bg-gray-200}
+  .topbar{@apply sticky top-0 z-30 backdrop-blur bg-white/5}
+  .pill{@apply rounded-2xl border px-3 py-2 text-white/90 bg-white/10 border-white/20}
+  .pill-active{@apply bg-white text-[#0F172A]}
+  .brand-home{ @apply h-10 w-10 rounded-2xl grid place-items-center; background: var(--primary); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 8px 20px -10px rgba(6,182,212,.8); }
+  .search-glass{ @apply rounded-2xl border px-4 py-2 pl-10 text-white/95 min-w-[260px]; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); border-color: rgba(255,255,255,.25); }
+  .search-glass::placeholder{ color: rgba(255,255,255,.75); }
+  .badge{ @apply inline-flex items-center rounded-full text-xs px-2 py-0.5 bg-gray-100 text-gray-700 }
+</style>
+</head>
+<body>
+<div class="bg-waves absolute inset-0 -z-10"></div>
+
+<!-- HEADER -->
+<header class="topbar">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
+    <div class="h-16 grid grid-cols-[auto,1fr,auto] items-center gap-4">
+      <div class="brand-home">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z"/></svg>
+      </div>
+
+      <nav class="flex items-center gap-2">
+        <a href="#" class="pill">Home</a>
+        <a href="#" class="pill pill-active">Rental Shop</a>
+        <a href="#" class="pill">Wishlist</a>
+      </nav>
+
+      <div class="flex items-center gap-3 justify-self-end">
+        <div class="relative">
+          <input class="search-glass" type="search" placeholder="Search products…">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        </div>
+        <button id="cartBtn" class="relative rounded-full h-10 w-10 grid place-items-center bg-white/10 border border-white/20 text-white">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 12.39A2 2 0 0 0 9.62 15H19a2 2 0 0 0 2-1.59l1.38-7.41H6"/></svg>
+          <span id="cartBadge" class="absolute -top-1 -right-1 text-xs bg-[var(--primary)] text-white rounded-full px-1.5 py-0.5">0</span>
+        </button>
+        <div class="relative">
+          <button id="me" class="rounded-2xl border px-3 py-1.5 flex items-center gap-2 text-white/90 bg-white/10 border-white/25">
+            <span class="h-8 w-8 rounded-full grid place-items-center bg-[var(--primary)] text-white font-semibold">A</span> Adam
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="meMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl shadow-black/10 overflow-hidden hidden z-20">
+            <a class="block px-3 py-2 text-sm text-[#111827] hover:bg-gray-100" href="#">Profile</a>
+            <a class="block px-3 py-2 text-sm text-[#111827] hover:bg-gray-100" href="#">Orders</a>
+            <a class="block px-3 py-2 text-sm text-[#111827] hover:bg-gray-100" href="#">Sign out</a>
+          </div>
+        </div>
+        <a class="btn-soft" href="#">Contact us</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-4 lg:px-6 py-6">
+  <!-- Breadcrumb steps -->
+  <nav class="text-white/80 text-sm mb-4">
+    <a href="shop_review_order.html" class="underline decoration-dotted hover:text-white">Review Order</a>
+    <span class="mx-2">›</span>
+    <span class="text-white">Delivery</span>
+    <span class="mx-2">›</span>
+    <a href="#" class="underline decoration-dotted hover:text-white">Payment</a>
+  </nav>
+
+  <div class="grid lg:grid-cols-[1fr_380px] gap-6">
+    <!-- Left: addresses + method -->
+    <section class="card p-6">
+      <h1 class="heading text-2xl font-bold">Delivery Details</h1>
+
+      <div class="mt-5">
+        <label class="block heading font-semibold mb-2">Delivery Address</label>
+        <textarea id="addrShip" class="input w-full h-28" placeholder="Door / Street, Area, City, State, PIN"></textarea>
+      </div>
+
+      <div class="mt-5">
+        <label class="block heading font-semibold mb-2">Invoice Address</label>
+        <textarea id="addrBill" class="input w-full h-28" placeholder="Door / Street, Area, City, State, PIN"></textarea>
+      </div>
+
+      <div class="flex items-center gap-2 mt-4">
+        <label class="inline-flex items-center cursor-pointer">
+          <input id="sameToggle" type="checkbox" class="sr-only peer">
+          <span class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-[var(--primary)] relative transition">
+            <span class="absolute left-1 top-1 h-4 w-4 bg-white rounded-full transition peer-checked:translate-x-5"></span>
+          </span>
+        </label>
+        <span class="text-[15px] text-white/90">Billing address same as delivery address</span>
+      </div>
+
+      <div class="mt-6 grid md:grid-cols-[1fr,auto] items-end gap-3">
+        <div>
+          <label class="block heading font-semibold mb-2">Choose Delivery Method</label>
+          <select id="method" class="input w-full">
+            <option value="0">Store pickup (₹0)</option>
+            <option value="120">Standard courier (₹120)</option>
+            <option value="350">Express same-day (₹350)</option>
+            <option value="600">Outstation freight (₹600)</option>
+          </select>
+          <p class="text-sm text-white/70 mt-1">Delivery charges apply based on the method.</p>
+        </div>
+        <div class="justify-self-end text-white/90">
+          <div class="text-sm">Delivery charge</div>
+          <div id="methodCharge" class="heading text-xl font-bold text-white">₹ 0</div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-3">
+        <button id="backBtn" class="btn-soft" type="button">‹ back to Cart</button>
+        <button id="confirmBtn" class="btn-primary" type="button">Confirm</button>
+      </div>
+    </section>
+
+    <!-- Right: summary -->
+    <aside class="card p-6 h-fit sticky top-24">
+      <div class="flex items-center justify-between">
+        <h2 class="heading font-semibold">Order Summary</h2>
+        <span id="summaryCount" class="badge">0 items</span>
+      </div>
+      <dl class="mt-4 space-y-3">
+        <div class="flex justify-between"><dt class="text-gray-600">Delivery Charge</dt><dd id="sumDelivery" class="font-medium">₹ 0</dd></div>
+        <div class="flex justify-between"><dt class="text-gray-600">Sub Total</dt><dd id="sumSub" class="font-medium">₹ 0</dd></div>
+        <div class="flex justify-between"><dt class="text-gray-600">Taxes (18%)</dt><dd id="sumTax" class="font-medium">₹ 0</dd></div>
+        <hr class="border-gray-200">
+        <div class="flex justify-between text-lg font-bold heading"><dt>Total</dt><dd id="sumTotal">₹ 0</dd></div>
+      </dl>
+
+      <div class="mt-5">
+        <label class="block text-gray-700 mb-1">Apply Coupon</label>
+        <div class="flex gap-2">
+          <input id="coupon" class="input flex-1" placeholder="Coupon Code (try SAVE10)">
+          <button id="applyCoupon" class="btn-primary" type="button">Apply</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  // Helpers
+  const $=(s,r=document)=>r.querySelector(s);
+  const fmt=n=>'₹ ' + (Number(n)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+
+  // Profile dropdown
+  $('#me').addEventListener('click', e=>{ e.stopPropagation(); $('#meMenu').classList.toggle('hidden'); });
+  document.addEventListener('click', ()=>$('#meMenu').classList.add('hidden'));
+
+  // --- Cart/Order context (demo) ---
+  const cartKey='rs_cart_count';
+  // Example items; in a real app you would read from server or storage
+  let items = JSON.parse(localStorage.getItem('rs_delivery_items') || 'null');
+  if(!items){
+    items = [
+      { id:'PRD-1001', name:'Professional Camera Kit', price:1500, qty:1 },
+      { id:'PRD-1002', name:'LED Light Panel',        price:500,  qty:2 }
+    ];
+  }
+  const subTotal = items.reduce((s,i)=>s+i.price*i.qty,0);
+  const count = items.reduce((s,i)=>s+i.qty,0);
+  localStorage.setItem(cartKey, String(count));
+  $('#cartBadge').textContent = localStorage.getItem(cartKey) || '0';
+  $('#summaryCount').textContent = `${count} item${count>1?'s':''}`;
+
+  // --- State ---
+  let delivery = 0;
+  let couponPct = 0; // 0 or .10
+
+  // --- Address toggle ---
+  $('#sameToggle').addEventListener('change', e=>{
+    if(e.target.checked){
+      $('#addrBill').value = $('#addrShip').value;
+      $('#addrBill').setAttribute('readonly','');
+      $('#addrBill').classList.add('bg-gray-100');
+    }else{
+      $('#addrBill').removeAttribute('readonly');
+      $('#addrBill').classList.remove('bg-gray-100');
+    }
+  });
+  // Keep synced while checked
+  $('#addrShip').addEventListener('input', ()=>{
+    if($('#sameToggle').checked){ $('#addrBill').value = $('#addrShip').value; }
+  });
+
+  // --- Delivery method ---
+  function updateDelivery(){
+    delivery = Number($('#method').value||0);
+    $('#methodCharge').textContent = fmt(delivery);
+    calcSummary();
+  }
+  $('#method').addEventListener('change', updateDelivery);
+
+  // --- Coupon ---
+  $('#applyCoupon').addEventListener('click', ()=>{
+    const code = ($('#coupon').value||'').trim().toUpperCase();
+    couponPct = (code==='SAVE10') ? 0.10 : 0;
+    if(couponPct>0){ $('#coupon').classList.add('ring-2','ring-green-400'); }
+    else{ $('#coupon').classList.add('ring-2','ring-red-500'); }
+    setTimeout(()=>$('#coupon').classList.remove('ring-2','ring-green-400','ring-red-500'), 1200);
+    calcSummary();
+  });
+
+  // --- Summary calc ---
+  function calcSummary(){
+    const disc = Math.round(subTotal * couponPct);
+    const taxable = Math.max(0, subTotal - disc);
+    const tax = Math.round(taxable * 0.18);
+    const total = taxable + tax + delivery;
+    $('#sumDelivery').textContent = fmt(delivery);
+    $('#sumSub').textContent = fmt(taxable);
+    $('#sumTax').textContent = fmt(tax);
+    $('#sumTotal').textContent = fmt(total);
+  }
+
+  // --- Actions ---
+  $('#backBtn').addEventListener('click', ()=> history.back());
+  $('#confirmBtn').addEventListener('click', ()=>{
+    const ship = $('#addrShip').value.trim();
+    const bill = $('#addrBill').value.trim();
+    if(!ship){ alert('Please enter a delivery address.'); return; }
+    if(!bill){ alert('Please enter an invoice address.'); return; }
+    alert('Delivery details confirmed! (Navigate to payment step here)');
+  });
+
+  // init
+  updateDelivery();
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <style>body{font-family:'Inter',sans-serif}</style>
+</head>
+<body class="min-h-screen bg-slate-50">
+  <header class="bg-white border-b sticky top-0">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="material-icons text-cyan-600">person</span>
+        <h1 class="font-bold">Rental Management • <span class="text-cyan-700">User</span></h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="who" class="text-sm text-slate-600"></span>
+        <button id="logout" class="px-3 py-1.5 rounded-lg border hover:bg-slate-50">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto p-4 grid gap-4">
+    <section class="bg-white rounded-xl shadow p-4">
+      <h2 class="font-semibold mb-2">My Profile</h2>
+      <div id="profile" class="text-sm"></div>
+    </section>
+    <section class="bg-white rounded-xl shadow p-4">
+      <h2 class="font-semibold mb-2">Actions</h2>
+      <div class="flex gap-3">
+        <button id="updatePhone" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg">Update phone</button>
+        <button id="changePassword" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold px-4 py-2 rounded-lg">Change password</button>
+      </div>
+    </section>
+  </main>
+
+<script>
+const LS_KEY = "rental_users_v1";
+const SESSION_KEY = "rental_session_v1";
+function getUsers(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)) || [] }catch{ return [] } }
+function setUsers(u){ localStorage.setItem(LS_KEY, JSON.stringify(u)) }
+function getSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY)) }catch{ return null } }
+function saveSession(u){ localStorage.setItem(SESSION_KEY, JSON.stringify(u)) }
+function requireRole(role){
+  const s = getSession();
+  if(!s || s.role !== role){ window.location.href = "user_login.html"; }
+  return s;
+}
+const me = requireRole("User");
+document.getElementById('who').textContent = me ? (me.name || me.email) : "";
+
+document.getElementById('logout').onclick = () => { localStorage.removeItem(SESSION_KEY); window.location.href="user_login.html"; };
+
+function renderProfile(){
+  const html = \`
+    <div class="grid sm:grid-cols-2 gap-y-1">
+      <div class="text-slate-500">Name</div><div>\${me.name}</div>
+      <div class="text-slate-500">Email</div><div>\${me.email}</div>
+      <div class="text-slate-500">Phone</div><div>\${me.phone||'-'}</div>
+      <div class="text-slate-500">Role</div><div>\${me.role}</div>
+      <div class="text-slate-500">Joined</div><div>\${new Date(me.createdAt).toLocaleString()}</div>
+    </div>\`;
+  document.getElementById('profile').innerHTML = html;
+}
+renderProfile();
+
+document.getElementById('updatePhone').onclick = () => {
+  const phone = prompt("Enter new phone number", me.phone || "");
+  if(phone===null) return;
+  const users = getUsers();
+  const idx = users.findIndex(u => u.id === me.id);
+  if(idx >= 0){
+    users[idx].phone = phone;
+    setUsers(users);
+    me.phone = phone;
+    saveSession(me);
+    renderProfile();
+    alert("Phone updated.");
+  }
+};
+document.getElementById('changePassword').onclick = () => {
+  const current = prompt("Enter current password");
+  if(current===null) return;
+  if(current !== me.password){ alert("Current password is incorrect."); return; }
+  const next = prompt("Enter new password (min 6 chars)");
+  if(next===null) return;
+  if(next.length < 6){ alert("Password too short."); return; }
+  const users = getUsers();
+  const idx = users.findIndex(u => u.id === me.id);
+  if(idx >= 0){
+    users[idx].password = next;
+    setUsers(users);
+    me.password = next;
+    saveSession(me);
+    alert("Password changed. Use the new password next time you login.");
+  }
+};
+</script>
+</body>
+</html>

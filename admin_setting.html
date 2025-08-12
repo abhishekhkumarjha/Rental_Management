@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin Dashboard • Settings</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <style type="text/tailwindcss">
+    :root{
+      --primary:#06B6D4; --primary-hover:#0891B2;
+      --bg-deep:#061222; --bg-bluegray:#0D3042;
+      --heading:#1F2937; --body:#6B7280; --icon:#9CA3AF;
+      --input-bg:#F9FAFB; --input-border:#D1D5DB;
+    }
+    html,body{height:100%}
+    body{
+      @apply text-[15px] antialiased;
+      color:var(--body);
+      background:
+        radial-gradient(1200px 800px at 20% 0%, rgba(6,182,212,.08), transparent 60%),
+        radial-gradient(900px 700px at 80% 100%, rgba(8,145,178,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-bluegray) 100%);
+      background-attachment:fixed;
+    }
+    .bg-waves::before{
+      content:""; position:absolute; inset:0; pointer-events:none; opacity:.35;
+      background-image:url('data:image/svg+xml;utf8,\
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 600" preserveAspectRatio="none">\
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">\
+          <stop stop-color="%2306B6D4" stop-opacity="0.25"/><stop offset="1" stop-color="%230D3042" stop-opacity="0.1"/>\
+        </linearGradient></defs>\
+        <path d="M0,120 C240,200 480,40 720,100 C960,160 1200,40 1440,120 L1440,0 L0,0 Z" fill="url(%23g)"/>\
+        <path d="M0,480 C220,420 520,560 760,500 C1000,440 1210,560 1440,500 L1440,600 L0,600 Z" fill="url(%23g)"/>\
+      </svg>');
+      background-size:cover; background-position:center; filter:blur(2px);
+    }
+
+    .card{@apply bg-white rounded-2xl shadow-xl shadow-black/10}
+    .btn-primary{background:var(--primary); color:#fff; @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 font-medium transition}
+    .btn-primary:hover{background:var(--primary-hover)}
+    .btn-ghost{@apply rounded-xl px-4 py-2 font-medium text-white border border-white/30 hover:bg-white/10 transition}
+    .link{color:var(--primary)} .link:hover{text-decoration:underline}
+    .heading{color:var(--heading)}
+    .input{background:var(--input-bg); border:1px solid var(--input-border); @apply rounded-xl px-3 py-2 outline-none transition}
+    .input:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(6,182,212,.25)}
+
+    /* Header */
+    .topbar{ @apply sticky top-0 z-30 backdrop-blur bg-white/5; }
+    .topbar-border{ box-shadow: inset 0 -1px 0 0 rgba(255,255,255,.12); }
+    .nav-link{ @apply text-white/90 px-3 py-2 rounded-xl transition font-medium; }
+    .nav-link:hover{ @apply text-white; background: rgba(255,255,255,.08); }
+    .nav-active-pill{
+      @apply bg-white text-[#0F172A] rounded-xl;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 6px 20px -12px rgba(0,0,0,.35);
+    }
+    .brand-home{
+      @apply h-10 w-10 rounded-2xl grid place-items-center;
+      background: var(--primary);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 8px 20px -10px rgba(6,182,212,.8);
+    }
+    .search-glass{
+      @apply rounded-2xl border px-4 py-2 pl-10 text-white/95 min-w-[280px];
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-color: rgba(255,255,255,.25);
+    }
+    .search-glass::placeholder{ color: rgba(255,255,255,.75); }
+    .search-glass:focus{
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(6,182,212,.25);
+    }
+    .user-pill{
+      @apply rounded-2xl border px-3 py-1.5 flex items-center gap-2 text-white/90 relative;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-color: rgba(255,255,255,.25);
+    }
+    .user-avatar{
+      @apply h-8 w-8 rounded-full grid place-items-center text-white font-semibold;
+      background: var(--primary);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+    }
+    .dropdown{ @apply absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl shadow-black/10 p-4 z-40; }
+    .drop-row{@apply flex items-center gap-3 text-sm text-[#374151];}
+    .drop-link{@apply text-[#0F172A] hover:bg-gray-100 rounded-lg px-3 py-2 w-full text-left;}
+
+    /* Tabs */
+    .tab{@apply text-sm rounded-xl px-3 py-2 cursor-pointer transition}
+    .tab-active{@apply bg-[var(--primary)] text-white}
+    .tab-passive{@apply bg-white/80 text-[#0F172A] border border-[#E5E7EB] hover:bg-white}
+    .toast{ @apply fixed right-4 bottom-4 bg-[#0F172A] text-white rounded-xl px-4 py-2 shadow-xl; }
+    .badge{ @apply inline-flex items-center rounded-full text-xs px-2 py-0.5 bg-gray-100 text-gray-700 }
+    .switch{ @apply inline-flex items-center gap-2 }
+  </style>
+</head>
+
+<body class="relative">
+  <div class="bg-waves absolute inset-0 -z-10"></div>
+
+  <div class="min-h-full">
+    <!-- HEADER -->
+    <div class="topbar topbar-border">
+      <div class="mx-auto px-4 md:px-8">
+        <div class="h-16 flex items-center gap-4">
+          <!-- Home / brand -->
+          <div class="brand-home">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z"/>
+            </svg>
+          </div>
+
+          <!-- Primary nav (Setting highlighted) -->
+          <nav id="topNav" class="flex items-center gap-1">
+            <a href="admin_dashboard.html" class="nav-link" data-route="dashboard">Dashboard</a>
+            <a href="admin_rental.html" class="nav-link" data-route="rental">Rental</a>
+            <a href="admin_order.html" class="nav-link" data-route="order">Order</a>
+            <a href="admin_products.html" class="nav-link" data-route="products">Products</a>
+            <a href="admin_reporting" class="nav-link" data-route="reporting">Reporting</a>
+            <a href="admin_setting" class="nav-link nav-active-pill" data-route="setting">Setting</a>
+          </nav>
+
+          <!-- Search + profile -->
+          <div class="ml-auto flex items-center gap-3">
+            <div class="relative">
+              <input id="globalSearch" class="search-glass" type="search" placeholder="Search settings…" />
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-opacity=".85" stroke-width="2">
+                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+              </svg>
+            </div>
+
+            <!-- Profile dropdown -->
+            <div class="relative">
+              <button id="profileBtn" class="user-pill" aria-haspopup="true" aria-expanded="false">
+                <span id="avatar" class="user-avatar">A</span>
+                <span id="topName">Adam</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+
+              <div id="profileMenu" class="dropdown hidden">
+                <div class="drop-row">
+                  <div id="menuAvatar" class="h-10 w-10 rounded-full bg-[var(--primary)] grid place-items-center text-white font-semibold">A</div>
+                  <div>
+                    <div id="menuName" class="font-semibold">Adam Carter</div>
+                    <div class="text-xs text-gray-500">Super Admin</div>
+                  </div>
+                </div>
+                <div id="menuEmail" class="mt-2 text-sm text-gray-600">adam@rentalshop.io</div>
+                <hr class="my-3">
+                <button class="drop-link">Profile</button>
+                <button class="drop-link">Security</button>
+                <hr class="my-3">
+                <button class="drop-link" id="signOut">Sign out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <main class="px-4 md:px-8 pb-12">
+      <header class="mt-8">
+        <h1 class="heading text-3xl font-bold">Settings</h1>
+        <p class="mt-1">Manage your profile, security, and notification preferences.</p>
+      </header>
+
+      <!-- Tabs -->
+      <div class="mt-6 flex flex-wrap gap-2">
+        <button data-tab="profile" class="tab tab-active">Profile</button>
+        <button data-tab="security" class="tab tab-passive">Security</button>
+        <button data-tab="notifications" class="tab tab-passive">Notifications</button>
+      </div>
+
+      <!-- PROFILE -->
+      <section id="tab-profile" class="card p-6 mt-4">
+        <h2 class="heading text-xl font-semibold">Profile</h2>
+        <div class="grid md:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Full name</label>
+            <input id="name" class="input w-full" type="text" value="Adam Carter"/>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Email</label>
+            <input id="email" class="input w-full" type="email" value="adam@rentalshop.io"/>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Phone</label>
+            <input id="phone" class="input w-full" type="tel" placeholder="+91 98xxxxxxx"/>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <button id="saveProfile" class="btn-primary">Save Profile</button>
+          <button id="resetProfile" class="btn-ghost">Reset</button>
+          <span class="badge">Role: Super Admin</span>
+        </div>
+      </section>
+
+      <!-- SECURITY -->
+      <section id="tab-security" class="card p-6 mt-4 hidden">
+        <h2 class="heading text-xl font-semibold">Security</h2>
+        <div class="grid md:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Current password</label>
+            <input id="curPwd" class="input w-full" type="password" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">New password</label>
+            <input id="newPwd" class="input w-full" type="password" />
+            <div id="pwdStrength" class="mt-1 text-xs text-gray-600">Strength: —</div>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Confirm new password</label>
+            <input id="newPwd2" class="input w-full" type="password" />
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <button id="changePwd" class="btn-primary">Change Password</button>
+          <label class="switch">
+            <input id="twoFA" type="checkbox" class="rounded">
+            <span>Enable 2-factor authentication</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS -->
+      <section id="tab-notifications" class="card p-6 mt-4 hidden">
+        <h2 class="heading text-xl font-semibold">Notifications</h2>
+        <div class="grid md:grid-cols-2 gap-4 mt-4">
+          <div class="space-y-2">
+            <label class="switch"><input id="nEmail" type="checkbox" checked> <span>Email updates</span></label><br>
+            <label class="switch"><input id="nSms" type="checkbox"> <span>SMS alerts</span></label><br>
+            <label class="switch"><input id="nPush" type="checkbox" checked> <span>Push notifications</span></label>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Digest frequency</label>
+            <select id="nDigest" class="input w-full">
+              <option>Daily</option><option selected>Weekly</option><option>Monthly</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <button id="saveNotif" class="btn-primary">Save Preferences</button>
+          <button id="testNotif" class="btn-ghost">Send Test</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden">Saved</div>
+
+  <script>
+    // ---------- Utilities ----------
+    const $ = (id)=>document.getElementById(id);
+    const toast = (msg)=>{ const t=$('toast'); t.textContent=msg; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),1500); };
+    const stateKey='rs_settings_v2_min'; // new key after trimming sections
+
+    // Initial state (defaults)
+    const defaults = {
+      profile:{ name:'Adam Carter', email:'adam@rentalshop.io', phone:'' },
+      security:{ twoFA:false },
+      notifications:{ email:true, sms:false, push:true, digest:'Weekly' }
+    };
+
+    let state = JSON.parse(localStorage.getItem(stateKey) || 'null') || defaults;
+
+    // ---------- Header profile dropdown ----------
+    const profileBtn=$('profileBtn'), profileMenu=$('profileMenu');
+    profileBtn.addEventListener('click', (e)=>{ e.stopPropagation(); profileMenu.classList.toggle('hidden'); });
+    document.addEventListener('click', ()=>profileMenu.classList.add('hidden'));
+    $('signOut').addEventListener('click', ()=>alert('Signed out (demo).'));
+
+    // ---------- Tabs ----------
+    const tabs=['profile','security','notifications'];
+    const tabBtns = tabs.map(t=>document.querySelector(`[data-tab="${t}"]`));
+    tabBtns.forEach(btn => btn.addEventListener('click', ()=>{
+      tabBtns.forEach(b=>{ b.classList.remove('tab-active'); b.classList.add('tab-passive'); });
+      btn.classList.add('tab-active'); btn.classList.remove('tab-passive');
+      tabs.forEach(t=>$('tab-'+t).classList.add('hidden'));
+      $('tab-'+btn.dataset.tab).classList.remove('hidden');
+    }));
+
+    // ---------- Bind form values from state ----------
+    function paintFromState(){
+      // Profile
+      $('name').value = state.profile.name;
+      $('email').value = state.profile.email;
+      $('phone').value = state.profile.phone || '';
+
+      // Header + menu name/email/avatar
+      $('topName').textContent = (state.profile.name.split(' ')[0] || 'User');
+      $('menuName').textContent = state.profile.name || 'User';
+      $('menuEmail').textContent = state.profile.email || '';
+      const initials = (state.profile.name.match(/\b\w/g)||['U']).slice(0,2).join('').toUpperCase();
+      $('avatar').textContent = initials[0];
+      $('menuAvatar').textContent = initials[0];
+
+      // Security
+      $('twoFA').checked = !!state.security.twoFA;
+
+      // Notifications
+      $('nEmail').checked = state.notifications.email;
+      $('nSms').checked   = state.notifications.sms;
+      $('nPush').checked  = state.notifications.push;
+      $('nDigest').value  = state.notifications.digest;
+    }
+
+    // ---------- Actions ----------
+    $('saveProfile').addEventListener('click', ()=>{
+      const name=$('name').value.trim(), email=$('email').value.trim();
+      if(!name || !/^\S+@\S+\.\S+$/.test(email)){ alert('Please enter a valid name and email.'); return; }
+      state.profile.name=name; state.profile.email=email; state.profile.phone=$('phone').value.trim();
+      persist(); paintFromState(); toast('Profile saved');
+    });
+    $('resetProfile').addEventListener('click', ()=>{ state.profile={...defaults.profile}; persist(); paintFromState(); toast('Profile reset'); });
+
+    $('twoFA').addEventListener('change', e=>{ state.security.twoFA=e.target.checked; persist(); toast(e.target.checked?'2FA enabled':'2FA disabled'); });
+
+    // Password strength
+    $('newPwd').addEventListener('input', e=>{
+      const s=strength(e.target.value); $('pwdStrength').textContent='Strength: '+s.label; $('pwdStrength').style.color=s.color;
+    });
+    $('changePwd').addEventListener('click', ()=>{
+      const cur=$('curPwd').value, p1=$('newPwd').value, p2=$('newPwd2').value;
+      if(!cur || !p1 || !p2) return alert('Fill all password fields.');
+      if(p1!==p2) return alert('New passwords do not match.');
+      if(strength(p1).score<3) return alert('Password is too weak.');
+      $('curPwd').value=$('newPwd').value=$('newPwd2').value='';
+      toast('Password changed (demo)');
+    });
+    function strength(p){
+      let s=0; if(p.length>=8) s++; if(/[A-Z]/.test(p)) s++; if(/[0-9]/.test(p)) s++; if(/[^A-Za-z0-9]/.test(p)) s++;
+      const arr=[{label:'Very weak',color:'#ef4444',score:0},{label:'Weak',color:'#f97316',score:1},{label:'OK',color:'#eab308',score:2},{label:'Good',color:'#22c55e',score:3},{label:'Strong',color:'#10b981',score:4}];
+      return arr[Math.min(s,4)];
+    }
+
+    $('saveNotif').addEventListener('click', ()=>{
+      state.notifications={ email:$('nEmail').checked, sms:$('nSms').checked, push:$('nPush').checked, digest:$('nDigest').value };
+      persist(); toast('Notification preferences saved');
+    });
+    $('testNotif').addEventListener('click', ()=>alert('Test notification sent (demo).'));
+
+    // Global search (dims sections that don't match)
+    $('globalSearch').addEventListener('input', e=>{
+      const q=e.target.value.toLowerCase();
+      document.querySelectorAll('section.card').forEach(sec=>{
+        const text=sec.innerText.toLowerCase();
+        sec.style.opacity = q && !text.includes(q) ? .25 : 1;
+      });
+    });
+
+    // Persist
+    function persist(){ localStorage.setItem(stateKey, JSON.stringify(state)); }
+
+    // Paint on load
+    paintFromState();
+  </script>
+</body>
+</html>
